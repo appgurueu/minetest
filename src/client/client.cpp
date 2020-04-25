@@ -717,7 +717,7 @@ bool Client::loadMedia(const std::string &data, const std::string &filename)
 	}
 
 	const char *model_ext[] = {
-		".x", ".b3d", ".md2", ".obj",
+		".x", ".dae", ".b3d", ".md2", ".obj",
 		NULL
 	};
 
