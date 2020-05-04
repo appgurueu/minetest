@@ -262,10 +262,10 @@ void ClientEnvironment::step(float dtime)
 	bool player_immortal = lplayer->getCAO() && lplayer->getCAO()->isImmortal();
 
 	for (const CollisionInfo &info : player_collisions) {
-		v3f speed_diff = info.new_speed - info.old_speed;;
+		v3f speed_diff = info.new_velocity - info.old_velocity;
 		// Handle only fall damage
 		// (because otherwise walking against something in fast_move kills you)
-		if (speed_diff.Y < 0 || info.old_speed.Y >= 0)
+		if (speed_diff.Y < 0 || info.old_velocity.Y >= 0)
 			continue;
 		// Get rid of other components
 		speed_diff.X = 0;

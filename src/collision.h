@@ -48,8 +48,8 @@ struct CollisionInfo
 	CollisionType type = COLLISION_NODE;
 	CollisionAxis axis = COLLISION_AXIS_NONE;
 	v3s16 node_p = v3s16(-32768,-32768,-32768); // COLLISION_NODE
-	v3f old_speed;
-	v3f new_speed;
+	v3f old_velocity;
+	v3f new_velocity;
 	int plane = -1;
 };
 

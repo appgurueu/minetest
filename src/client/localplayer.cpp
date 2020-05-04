@@ -391,8 +391,8 @@ void LocalPlayer::move(f32 dtime, Environment *env, f32 pos_max_d,
 			// Collide with sneak node, report fall damage
 			CollisionInfo sn_info;
 			sn_info.node_p = m_sneak_node;
-			sn_info.old_speed = old_speed;
-			sn_info.new_speed = m_speed;
+			sn_info.old_velocity = old_speed;
+			sn_info.new_velocity = m_speed;
 			collision_info->push_back(sn_info);
 		}
 	}

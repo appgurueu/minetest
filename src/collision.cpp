@@ -504,7 +504,7 @@ collisionMoveResult collisionMoveSimple(Environment *env, IGameDef *gamedef,
 				info.type = COLLISION_NODE;
 
 			info.node_p = nearest_info.position;
-			info.old_speed = *speed_f;
+			info.old_velocity = *speed_f;
 			info.plane = nearest_collided;
 
 			// Set the speed component that caused the collision to zero
@@ -532,8 +532,8 @@ collisionMoveResult collisionMoveSimple(Environment *env, IGameDef *gamedef,
 				result.collides = true;
 			}
 
-			info.new_speed = *speed_f;
-			if (info.new_speed.getDistanceFrom(info.old_speed) < 0.1f * BS)
+			info.new_velocity = *speed_f;
+			if (info.new_velocity.getDistanceFrom(info.old_velocity) < 0.1f * BS)
 				is_collision = false;
 
 			if (is_collision) {
