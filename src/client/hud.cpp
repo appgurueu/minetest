@@ -389,12 +389,13 @@ void Hud::drawLuaElements(const v3s16 &camera_offset)
 				if (e->offset.X < -20)
 					textfont = font_scaled;
 #endif
-				auto wss = std::wstringstream(text);
+				// Handle multiline text alignment
+				std::wstringstream wss(text);
 				std::wstring line;
-			    while (std::getline(wss, line, L'\n'))
-				{
+				while (std::getline(wss, line, L'\n')) {
 					core::dimension2d<u32> linesize = textfont->getDimension(line.c_str());
 					v2s32 line_offset((e->align.X - 1.0) * (linesize.Width / 2), 0);
+
 					textfont->draw(line.c_str(), size + pos + offset + offs + line_offset, color);
 					offset.Y += linesize.Height;
 				}
