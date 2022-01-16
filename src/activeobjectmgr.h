@@ -23,6 +23,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <memory>
 #include <vector>
 #include "debug.h"
+#include "util/objectboxstore.h"
 #include "irrlichttypes.h"
 #include "util/basic_macros.h"
 
@@ -70,7 +71,8 @@ public:
 		}
 		return ids;
 	}
-
+	ObjectBoxStore m_active_objects_by_collisionbox;
+	ObjectBoxStore m_active_objects_by_selectionbox;
 protected:
 	u16 getFreeId() const
 	{

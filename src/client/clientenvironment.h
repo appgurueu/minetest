@@ -103,6 +103,7 @@ public:
 	*/
 	u16 addActiveObject(std::unique_ptr<ClientActiveObject> object);
 
+	// TODO add collision & selectionbox
 	void addActiveObject(u16 id, u8 type, const std::string &init_data);
 	void removeActiveObject(u16 id);
 

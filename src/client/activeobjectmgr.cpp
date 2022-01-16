@@ -143,4 +143,15 @@ std::vector<DistanceSortedActiveObject> ActiveObjectMgr::getActiveSelectableObje
 	return dest;
 }
 
+void ActiveObjectMgr::getActiveObjectsRay(const v3f from, const v3f to,
+		std::vector<DistanceSortedActiveObject> &dest)
+{
+	std::vector<u16> ids;
+	m_active_objects_by_selectionbox.getIntersectingLine(&ids, from, to);
+	for (u16 id : ids) {
+		ClientActiveObject *obj = m_active_objects[id];
+		dest.emplace_back(obj, (obj->getPosition() - from).getLengthSQ());
+	}
+}
+
 } // namespace client

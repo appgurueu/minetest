@@ -43,5 +43,8 @@ public:
 	/// @note CAOs without a selection box are not returned.
 	/// @note Distances are along the @p shootline.
 	std::vector<DistanceSortedActiveObject> getActiveSelectableObjects(const core::line3d<f32> &shootline);
+	
+	void getActiveObjectsRay(const v3f from, const v3f to,
+			std::vector<DistanceSortedActiveObject> &dest);
 };
 } // namespace client

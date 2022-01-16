@@ -124,6 +124,8 @@ void ActiveObjectMgr::removeObject(u16 id)
 	// m_active_objects.
 	it->second.reset();
 	m_active_objects.erase(id); // `it` can be invalid now
+	m_active_objects_by_collisionbox.remove(id);
+	m_active_objects_by_selectionbox.remove(id);
 }
 
 // clang-format on
@@ -153,6 +155,32 @@ void ActiveObjectMgr::getObjectsInArea(const aabb3f &box,
 		if (!box.isPointInside(objectpos))
 			continue;
 
+		if (!include_obj_cb || include_obj_cb(obj))
+			result.push_back(obj);
+	}
+}
+
+void ActiveObjectMgr::getObjectsCollisionboxInArea(const aabb3f box,
+		std::vector<ServerActiveObject *> &result,
+		std::function<bool(ServerActiveObject *obj)> include_obj_cb)
+{
+	std::vector<u16> ids;
+	m_active_objects_by_collisionbox.getInArea(&ids, box);
+	for (u16 id : ids) {
+		ServerActiveObject *obj = m_active_objects[id];
+		if (!include_obj_cb || include_obj_cb(obj))
+			result.push_back(obj);
+	}
+}
+
+void ActiveObjectMgr::getObjectsSelectionboxIntersectsLine(const v3f from, const v3f to,
+		std::vector<ServerActiveObject *> &result,
+		std::function<bool(ServerActiveObject *obj)> include_obj_cb)
+{
+	std::vector<u16> ids;
+	m_active_objects_by_selectionbox.getIntersectingLine(&ids, from, to);
+	for (u16 id : ids) {
+		ServerActiveObject *obj = m_active_objects[id];
 		if (!include_obj_cb || include_obj_cb(obj))
 			result.push_back(obj);
 	}
