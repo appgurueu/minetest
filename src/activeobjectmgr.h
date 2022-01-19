@@ -71,6 +71,9 @@ public:
 		}
 		return ids;
 	}
+
+	ObjectBoxStore m_active_objects_by_collisionbox;
+	ObjectBoxStore m_active_objects_by_selectionbox;
 protected:
 	u16 getFreeId() const
 	{
