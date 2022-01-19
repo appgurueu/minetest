@@ -71,8 +71,6 @@ public:
 		}
 		return ids;
 	}
-	ObjectBoxStore m_active_objects_by_collisionbox;
-	ObjectBoxStore m_active_objects_by_selectionbox;
 protected:
 	u16 getFreeId() const
 	{
@@ -96,4 +94,6 @@ protected:
 	// Note: ActiveObjects can access the ActiveObjectMgr. Only erase objects using
 	// removeObject()!
 	std::map<u16, std::unique_ptr<T>> m_active_objects;
+	ObjectBoxStore m_active_objects_by_collisionbox;
+	ObjectBoxStore m_active_objects_by_selectionbox;
 };
