@@ -23,7 +23,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <memory>
 #include <vector>
 #include "debug.h"
-#include "util/objectboxstore.h"
+#include "util/spatialstore.h"
 #include "irrlichttypes.h"
 #include "util/basic_macros.h"
 
