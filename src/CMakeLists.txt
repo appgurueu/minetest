@@ -215,7 +215,6 @@ else(USE_PROMETHEUS)
 	message(STATUS "Prometheus client disabled.")
 endif(USE_PROMETHEUS)
 
-find_package(THST REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Zstd REQUIRED)
 
