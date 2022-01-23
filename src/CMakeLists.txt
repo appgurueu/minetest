@@ -215,10 +215,11 @@ else(USE_PROMETHEUS)
 	message(STATUS "Prometheus client disabled.")
 endif(USE_PROMETHEUS)
 
-find_package(libspatialindex REQUIRED)
+find_package(THST REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Zstd REQUIRED)
 
+set(USE_SPATIAL FALSE)
 
 if(NOT MSVC)
 	set(USE_GPROF FALSE CACHE BOOL "Use -pg flag for g++")
@@ -532,8 +533,8 @@ if(BUILD_CLIENT)
 		${JSON_LIBRARY}
 		${LUA_BIT_LIBRARY}
 		${FREETYPE_LIBRARY}
+		THST::THST
 		${PLATFORM_LIBS}
-		libspatialindex::libspatial
 	)
 	if(NOT USE_LUAJIT)
 		set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -602,7 +603,7 @@ if(BUILD_SERVER)
 		${LUA_LIBRARY}
 		${LUA_BIT_LIBRARY}
 		${GMP_LIBRARY}
-		libspatialindex::libspatial
+		THST::THST
 		${PLATFORM_LIBS}
 	)
 	set_target_properties(${PROJECT_NAME}server PROPERTIES
