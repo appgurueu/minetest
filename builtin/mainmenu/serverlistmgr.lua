@@ -65,6 +65,27 @@ function Normalizer:calc()
 	return ret
 end
 
+local function filter_server_list(list)
+	local filtered = {}
+	local blacklisted_modnames = {}
+	for modname in (core.settings:get("serverlist_mod_blacklist") or ""):gmatch("[A-Za-z0-9_]+") do
+		blacklisted_modnames[modname] = true
+	end
+	for _, server in ipairs(list) do
+		local keep = true
+		for _, modname in ipairs(server.mods or {}) do
+			if blacklisted_modnames[modname] then
+				keep = false
+				break
+			end
+		end
+		if keep then
+			table.insert(filtered, server)
+		end
+	end
+	return filtered
+end
+
 --------------------------------------------------------------------------------
 -- how much the pre-sorted server list contributes to the final ranking
 local WEIGHT_SORT = 2
@@ -186,7 +207,7 @@ function serverlistmgr.sync()
 		nil,
 		function(result)
 			public_downloading = false
-			local favs = order_server_list(result)
+			local favs = order_server_list(filter_server_list(result))
 			if favs[1] then
 				serverlistmgr.servers = favs
 			end
