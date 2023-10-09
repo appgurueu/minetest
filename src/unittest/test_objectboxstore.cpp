@@ -20,6 +20,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "test.h"
 #include "util/spatialstore.h"
 
+#include <catch.hpp>
+
 #include <cstddef>
 #include <vector>
 
@@ -147,6 +149,22 @@ void TestObjectBoxStore::testGetInArea()
 	res.clear();
 }
 
+TEST_CASE("temp") {
+	ObjectBoxStore store{};
+	std::vector<u16> res{};
+
+	// line does not intersect one region
+	store.insert(0, {{-5.5f, -5.5f, -5.5f}, {5.5f, 5.5f, 5.5f}});
+	res = store.getRegionIdsIntersectedBy(
+			{-11.0f, -11.0f, -11.0f}, {11.0f, 11.0f, 11.0f});
+	CHECK(res.size() == 0U);
+
+	// line goes straight through the region
+	res = store.getRegionIdsIntersectedBy(
+		{-6.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
+	CHECK(res.size() == 1U);
+}
+
 void TestObjectBoxStore::testGetRegionIdsIntersectedBy()
 {
 	ObjectBoxStore store{};
@@ -157,4 +175,9 @@ void TestObjectBoxStore::testGetRegionIdsIntersectedBy()
 	res = store.getRegionIdsIntersectedBy(
 			{-11.0f, -11.0f, -11.0f}, {11.0f, 11.0f, 11.0f});
 	UASSERTEQ(std::size_t, res.size(), 0);
+
+	// line goes straight through the region
+	res = store.getRegionIdsIntersectedBy(
+		{-6.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
+	UASSERTEQ(std::size_t, res.size(), 1);
 }

@@ -109,9 +109,16 @@ public:
 
 	void getInArea(std::vector<U> *result, T space) const { *result = getInArea(space); }
 
-	std::vector<U> getRegionIdsIntersectedBy(v3f from, v3f) const
+	std::vector<U> getRegionIdsIntersectedBy(v3f from, v3f dir) const
 	{
-		std::vector<U> objectIds{};
+		std::vector<sp_util::TaggedBBox<U>> results;
+		std::vector<U> objectIds;
+		float origin[]{from.X, from.Y, from.Z};
+		float direction[]{dir.X, dir.Y, dir.Z};
+		m_tree.rayQuery(origin, direction, std::back_inserter(results));
+		for (const auto &obj : results) {
+			objectIds.push_back(obj.idTag);
+		}
 
 		return objectIds;
 	}
