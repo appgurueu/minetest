@@ -38,7 +38,6 @@ public:
 	void testRemoval();
 	void testClear();
 	void testGetInArea();
-	void testGetRegionIdsIntersectedBy();
 };
 
 static TestObjectBoxStore g_test_instance;
@@ -50,7 +49,6 @@ void TestObjectBoxStore::runTests(IGameDef *gamedef)
 	TEST(testRemoval);
 	TEST(testClear);
 	TEST(testGetInArea);
-	TEST(testGetRegionIdsIntersectedBy);
 }
 
 void TestObjectBoxStore::testConstructor()
@@ -149,35 +147,20 @@ void TestObjectBoxStore::testGetInArea()
 	res.clear();
 }
 
-TEST_CASE("temp") {
-	ObjectBoxStore store{};
-	std::vector<u16> res{};
+TEST_CASE("spatial raycasting") {
+	ObjectBoxStore store;
+	std::vector<u16> intersected;
+	store.insert(0, {{-5.0f, -5.0f, -5.0f}, {5.0f, 5.0f, 5.0f}});
 
-	// line does not intersect one region
-	store.insert(0, {{-5.5f, -5.5f, -5.5f}, {5.5f, 5.5f, 5.5f}});
-	res = store.getRegionIdsIntersectedBy(
-			{-11.0f, -11.0f, -11.0f}, {11.0f, 11.0f, 11.0f});
-	CHECK(res.size() == 0U);
+	SECTION("the ray misses the box") {
+		intersected= store.getRegionIdsIntersectedBy(
+			{-11.0f, -11.0f, -11.0f}, {0.0f, 1.0f, 0.0f});
+		CHECK(intersected.size() == 0U);
+	}
 
-	// line goes straight through the region
-	res = store.getRegionIdsIntersectedBy(
-		{-6.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
-	CHECK(res.size() == 1U);
-}
-
-void TestObjectBoxStore::testGetRegionIdsIntersectedBy()
-{
-	ObjectBoxStore store{};
-	std::vector<u16> res{};
-
-	// line does not intersect one region
-	store.insert(0, {{-5.5f, -5.5f, -5.5f}, {5.5f, 5.5f, 5.5f}});
-	res = store.getRegionIdsIntersectedBy(
-			{-11.0f, -11.0f, -11.0f}, {11.0f, 11.0f, 11.0f});
-	UASSERTEQ(std::size_t, res.size(), 0);
-
-	// line goes straight through the region
-	res = store.getRegionIdsIntersectedBy(
-		{-6.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
-	UASSERTEQ(std::size_t, res.size(), 1);
+	SECTION("the ray passes through the box on the x axis") {
+		intersected = store.getRegionIdsIntersectedBy(
+			{-6.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
+		CHECK(intersected.size() == 1);
+	}
 }
