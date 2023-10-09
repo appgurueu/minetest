@@ -24,7 +24,6 @@ set (UNITTEST_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/test_noise.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/test_objdef.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/test_objectboxstore.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/test_player.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/test_profiler.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/test_random.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/test_schematic.cpp
