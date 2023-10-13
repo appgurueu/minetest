@@ -81,6 +81,16 @@ public:
 		Some simple getters/setters
 	*/
 	v3f getBasePosition() const { return m_base_position; }
+
+	/*!
+	 * Returns the selection box of the object in absolute coordinates.
+	 *
+	 * @param toset Out parameter for the selection box. 
+	 * @returns true if the object has a selection box.
+	 * @see getSelectionBox
+	*/
+	bool getSelectionBoxAbsolute(aabb3f *toset) const;
+
 	virtual void setBasePosition(v3f pos);
 	ServerEnvironment* getEnv(){ return m_env; }
 

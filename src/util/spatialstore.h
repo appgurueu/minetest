@@ -34,7 +34,7 @@ template <typename T, typename U = u32>
 class SpatialStore
 {
 private:
-	spatial::RTree<float, sp_util::TaggedBBox<U>, 3, 7, 3,
+	spatial::RTree<float, sp_util::TaggedBBox<U>, 3, 64, 32,
 			sp_util::TaggedBBoxIndexable<U>>
 			m_tree;
 	std::map<U, T> m_spacesMap;
@@ -109,13 +109,15 @@ public:
 
 	void getInArea(std::vector<U> *result, T space) const { *result = getInArea(space); }
 
-	std::vector<U> getRegionIdsIntersectedBy(v3f from, v3f dir) const
+	std::vector<U> getRegionIdsIntersectedBy(v3f from, v3f to) const
 	{
 		std::vector<sp_util::TaggedBBox<U>> results;
 		std::vector<U> objectIds;
 		float origin[]{from.X, from.Y, from.Z};
-		float direction[]{dir.X, dir.Y, dir.Z};
-		m_tree.rayQuery(origin, direction, std::back_inserter(results));
+		v3f diff = to - from;
+		float diffArr[]{diff.X, diff.Y, diff.Z};
+		m_tree.rayQuery(origin, diffArr, 1, std::back_inserter(results));
+		objectIds.reserve(results.size());
 		for (const auto &obj : results) {
 			objectIds.push_back(obj.idTag);
 		}

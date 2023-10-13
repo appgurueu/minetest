@@ -32,25 +32,32 @@ ServerActiveObject::ServerActiveObject(ServerEnvironment *env, v3f pos):
 {
 }
 
-void ServerActiveObject::addedToEnvironment(u32 dtime_s) {
-	aabb3f object_collisionbox;
-	if (getCollisionBox(&object_collisionbox)) 
-		getEnv()->m_ao_manager.m_active_objects_by_collisionbox.insert(m_id, object_collisionbox);
-	aabb3f object_selectionbox;
-	if (getSelectionBox(&object_selectionbox)) 
-		getEnv()->m_ao_manager.m_active_objects_by_selectionbox.insert(m_id, object_selectionbox);
+bool ServerActiveObject::getSelectionBoxAbsolute(aabb3f *toset) const
+{
+	if (!this->getSelectionBox(toset)) {
+		return false;
+	}
+	toset->MinEdge = toset->MinEdge * BS + this->getBasePosition();
+	toset->MaxEdge = toset->MaxEdge * BS + this->getBasePosition();
+	return true;
 }
 
+void ServerActiveObject::addedToEnvironment(u32 dtime_s) {}
+
 void ServerActiveObject::setBasePosition(v3f pos) {
-	// TODO also update on property change
 	m_base_position = pos;
-	getEnv()->m_ao_manager.m_active_objects_by_collisionbox.remove(m_id);
-	getEnv()->m_ao_manager.m_active_objects_by_selectionbox.remove(m_id);
+
+	// HACK: Checks whether removal was successful.
+	// Why don't we return early if this object is marked for deletion, if that's the issue, instead?
+
 	aabb3f object_collisionbox;
-	if (getCollisionBox(&object_collisionbox)) 
+	if (getEnv()->m_ao_manager.m_active_objects_by_collisionbox.remove(m_id)
+			&& getCollisionBox(&object_collisionbox))
 		getEnv()->m_ao_manager.m_active_objects_by_collisionbox.insert(m_id, object_collisionbox);
+	
 	aabb3f object_selectionbox;
-	if (getSelectionBox(&object_selectionbox)) 
+	if (getEnv()->m_ao_manager.m_active_objects_by_selectionbox.remove(m_id)
+			&& getSelectionBoxAbsolute(&object_selectionbox)) 
 		getEnv()->m_ao_manager.m_active_objects_by_selectionbox.insert(m_id, object_selectionbox);
 }
 
@@ -58,12 +65,13 @@ void ServerActiveObject::setBasePosition(v3f pos) {
 void ServerActiveObject::notifyObjectPropertiesModified()
 {
 	getEnv()->m_ao_manager.m_active_objects_by_collisionbox.remove(m_id);
-	getEnv()->m_ao_manager.m_active_objects_by_selectionbox.remove(m_id);
 	aabb3f object_collisionbox;
-	if (getCollisionBox(&object_collisionbox)) 
+	if (getCollisionBox(&object_collisionbox))
 		getEnv()->m_ao_manager.m_active_objects_by_collisionbox.insert(m_id, object_collisionbox);
+
+	getEnv()->m_ao_manager.m_active_objects_by_selectionbox.remove(m_id);
 	aabb3f object_selectionbox;
-	if (getSelectionBox(&object_selectionbox)) 
+	if (getSelectionBoxAbsolute(&object_selectionbox)) 
 		getEnv()->m_ao_manager.m_active_objects_by_selectionbox.insert(m_id, object_selectionbox);
 }
 

@@ -150,17 +150,25 @@ void TestObjectBoxStore::testGetInArea()
 TEST_CASE("spatial raycasting") {
 	ObjectBoxStore store;
 	std::vector<u16> intersected;
-	store.insert(0, {{-5.0f, -5.0f, -5.0f}, {5.0f, 5.0f, 5.0f}});
+	store.insert(42, {{-5.0f, -5.0f, -5.0f}, {5.0f, 5.0f, 5.0f}});
 
 	SECTION("the ray misses the box") {
 		intersected= store.getRegionIdsIntersectedBy(
-			{-11.0f, -11.0f, -11.0f}, {0.0f, 1.0f, 0.0f});
+			{-11.0f, -11.0f, -11.0f}, {-11.0f, -10.0f, -11.0f});
 		CHECK(intersected.size() == 0U);
 	}
 
 	SECTION("the ray passes through the box on the x axis") {
 		intersected = store.getRegionIdsIntersectedBy(
-			{-6.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
-		CHECK(intersected.size() == 1);
+			{-6.0f, 0.0f, 0.0f}, {-5.0f, 0.0f, 0.0f});
+		REQUIRE(intersected.size() == 1);
+		CHECK(intersected[0] == 42);
+	}
+
+	SECTION("the ray is inside the box") {
+		intersected = store.getRegionIdsIntersectedBy(
+			{-1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, 1.0f});
+		REQUIRE(intersected.size() == 1);
+		CHECK(intersected[0] == 42);
 	}
 }

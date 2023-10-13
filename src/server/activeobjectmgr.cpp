@@ -101,7 +101,14 @@ bool ActiveObjectMgr::registerObject(std::unique_ptr<ServerActiveObject> obj)
 	}
 
 	auto obj_p = obj.get();
-	m_active_objects[obj->getId()] = std::move(obj);
+	u16 id = obj->getId();
+	m_active_objects[id] = std::move(obj);
+	aabb3f object_collisionbox;
+	if (obj_p->getCollisionBox(&object_collisionbox)) 
+		m_active_objects_by_collisionbox.insert(id, object_collisionbox);
+	aabb3f object_selectionbox;
+	if (obj_p->getSelectionBoxAbsolute(&object_selectionbox)) 
+		m_active_objects_by_selectionbox.insert(id, object_selectionbox);
 
 	verbosestream << "Server::ActiveObjectMgr::addActiveObjectRaw(): "
 			<< "Added id=" << obj_p->getId() << "; there are now "
@@ -134,15 +141,11 @@ void ActiveObjectMgr::getObjectsInsideRadius(const v3f &pos, float radius,
 		std::function<bool(ServerActiveObject *obj)> include_obj_cb)
 {
 	float r2 = radius * radius;
-	for (auto &activeObject : m_active_objects) {
-		ServerActiveObject *obj = activeObject.second.get();
+	auto radius_include_obj_cb = [pos, r2, include_obj_cb](ServerActiveObject *obj) {
 		const v3f &objectpos = obj->getBasePosition();
-		if (objectpos.getDistanceFromSQ(pos) > r2)
-			continue;
-
-		if (!include_obj_cb || include_obj_cb(obj))
-			result.push_back(obj);
-	}
+		return objectpos.getDistanceFromSQ(pos) <= r2 && (!include_obj_cb || include_obj_cb(obj));
+	};
+	return getObjectsInArea(aabb3f(pos - radius, pos + radius), result, radius_include_obj_cb);
 }
 
 void ActiveObjectMgr::getObjectsInArea(const aabb3f &box,
@@ -166,21 +169,22 @@ void ActiveObjectMgr::getObjectsCollisionboxInArea(const aabb3f box,
 {
 	std::vector<u16> ids;
 	m_active_objects_by_collisionbox.getInArea(&ids, box);
-	for (auto const &it : m_active_objects) {
-		auto obj = it.second.get();
+	for (u16 id : ids) {
+		auto obj = m_active_objects.at(id).get();
 		if (!include_obj_cb || include_obj_cb(obj))
 			result.push_back(obj);
 	}
 }
 
+// TODO: objects with rotating selectionboxes shall be managed by an enclosing bounding box
 void ActiveObjectMgr::getObjectsSelectionboxIntersectsLine(const v3f from, const v3f to,
 		std::vector<ServerActiveObject *> &result,
 		std::function<bool(ServerActiveObject *obj)> include_obj_cb)
 {
 	std::vector<u16> ids{
 	    m_active_objects_by_selectionbox.getRegionIdsIntersectedBy(from, to)};
-	for (auto const &it : m_active_objects) {
-		auto obj = it.second.get();
+	for (u16 id : ids) {
+		auto obj = m_active_objects.at(id).get();
 		if (!include_obj_cb || include_obj_cb(obj))
 			result.push_back(obj);
 	}
