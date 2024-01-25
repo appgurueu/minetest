@@ -83,6 +83,7 @@ MapblockMeshGenerator::MapblockMeshGenerator(MeshMakeData *input, MeshCollector 
 	enable_mesh_cache(g_settings->getBool("enable_mesh_cache") &&
 			!data->m_smooth_lighting) // Mesh cache is not supported with smooth lighting
 {
+	cam_f = &nodedef->get(data->m_cameranode);
 }
 
 void MapblockMeshGenerator::useTile(int index, u8 set_flags, u8 reset_flags, bool special)
@@ -434,6 +435,10 @@ void MapblockMeshGenerator::drawSolidNode()
 			if (f2.solidness == 2)
 				continue;
 			if (cur_node.f->drawtype == NDT_LIQUID) {
+			  if (f2.drawtype == NDT_GLASSLIKE) {
+				  if (cur_node.f->sameLiquidRender(*cam_f))
+					  continue;
+				}
 				if (cur_node.f->sameLiquidRender(f2))
 					continue;
 				backface_culling = f2.solidness || f2.visual_solidness;

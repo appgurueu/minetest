@@ -22,6 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "irrlichttypes_extrabloated.h"
 #include "client/tile.h"
 #include "voxel.h"
+#include "camera.h"
 #include <array>
 #include <map>
 #include <unordered_map>
@@ -47,9 +48,11 @@ struct MeshMakeData
 	u16 side_length;
 
 	const NodeDefManager *nodedef;
+	MapNode m_cameranode;
 	bool m_use_shaders;
 
-	MeshMakeData(const NodeDefManager *ndef, u16 side_length, bool use_shaders);
+	MeshMakeData(const NodeDefManager *ndef, u16 side_length,
+			bool use_shaders, MapNode m_cameranode);
 
 	/*
 		Copy block data manually (to allow optimizations by the caller)

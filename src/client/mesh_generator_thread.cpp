@@ -21,6 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "settings.h"
 #include "profiler.h"
 #include "client.h"
+#include "camera.h"
 #include "mapblock.h"
 #include "map.h"
 #include "util/directiontables.h"
@@ -190,7 +191,10 @@ void MeshUpdateQueue::done(v3s16 pos)
 void MeshUpdateQueue::fillDataFromMapBlocks(QueuedMeshUpdate *q)
 {
 	auto mesh_grid = m_client->getMeshGrid();
-	MeshMakeData *data = new MeshMakeData(m_client->ndef(), MAP_BLOCKSIZE * mesh_grid.cell_size, m_cache_enable_shaders);
+	auto camerapos = floatToInt(m_client->getCamera()->getPosition(), BS);
+	auto cameranode = m_client->getEnv().getMap().getNode(camerapos);
+	MeshMakeData *data = new MeshMakeData(m_client->ndef(),
+			MAP_BLOCKSIZE * mesh_grid.cell_size, m_cache_enable_shaders, cameranode);
 	q->data = data;
 
 	data->fillBlockDataBegin(q->p);
