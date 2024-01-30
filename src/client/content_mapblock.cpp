@@ -426,6 +426,7 @@ void MapblockMeshGenerator::drawSolidNode()
 		MapNode neighbor = data->m_vmanip.getNodeNoEx(p2);
 		content_t n2 = neighbor.getContent();
 		bool backface_culling = cur_node.f->drawtype == NDT_NORMAL;
+		bool is_hiddable = false;
 		if (n2 == n1)
 			continue;
 		if (n2 == CONTENT_IGNORE)
@@ -435,12 +436,11 @@ void MapblockMeshGenerator::drawSolidNode()
 			if (f2.solidness == 2)
 				continue;
 			if (cur_node.f->drawtype == NDT_LIQUID) {
-			  if (f2.drawtype == NDT_GLASSLIKE) {
-				  if (cur_node.f->sameLiquidRender(*cam_f))
-					  continue;
-				}
 				if (cur_node.f->sameLiquidRender(f2))
 					continue;
+				if (f2.drawtype == NDT_GLASSLIKE) {
+					is_hiddable = true;
+				}
 				backface_culling = f2.solidness || f2.visual_solidness;
 			}
 		}
@@ -451,6 +451,11 @@ void MapblockMeshGenerator::drawSolidNode()
 				layer.material_flags |= MATERIAL_FLAG_BACKFACE_CULLING;
 			layer.material_flags |= MATERIAL_FLAG_TILEABLE_HORIZONTAL;
 			layer.material_flags |= MATERIAL_FLAG_TILEABLE_VERTICAL;
+			if (is_hiddable) {
+				layer.material_flags |= MATERIAL_FLAG_HIDDABLE;
+				layer.liquid_source_id = cur_node.f->liquid_alternative_source_id;
+				layer.liquid_flowing_id = cur_node.f->liquid_alternative_flowing_id;
+			}
 		}
 		if (!data->m_smooth_lighting) {
 			lights[face] = getFaceLight(cur_node.n, neighbor, nodedef);

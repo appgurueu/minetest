@@ -644,6 +644,7 @@ MapBlockMesh::MapBlockMesh(Client *client, MeshMakeData *data, v3s16 camera_offs
 	m_last_crack(-1),
 	m_last_daynight_ratio((u32) -1)
 {
+	m_texture_blank = m_tsrc->getTextureForMesh("blank.png", &m_texture_blank_id);
 	for (auto &m : m_mesh)
 		m = new scene::SMesh();
 	m_enable_shaders = data->m_use_shaders;
@@ -738,6 +739,16 @@ MapBlockMesh::MapBlockMesh(Client *client, MeshMakeData *data, v3s16 camera_offs
 				}
 				// Replace tile texture with the first animation frame
 				p.layer.texture = (*p.layer.frames)[0].texture;
+			}
+
+			// - Texture hiddable
+			if (p.layer.material_flags & MATERIAL_FLAG_HIDDABLE) {
+				// Add to MapBlockMesh to hiddable
+				auto &info = m_hiddable_info[{layer, i}];
+				info.hidden = false;
+				info.liquid_source_id = p.layer.liquid_source_id;
+				info.liquid_flowing_id = p.layer.liquid_flowing_id;
+				info.tile = p.layer;
 			}
 
 			if (!m_enable_shaders) {
@@ -913,6 +924,38 @@ bool MapBlockMesh::animate(bool faraway, float time, int crack,
 	}
 
 	return true;
+}
+
+void MapBlockMesh::updateHiddable(content_t liquid_source_id, content_t liquid_flowing_id)
+{
+	// Texture animation
+	for (auto &it : m_hiddable_info) {
+		const TileLayer &tile = it.second.tile;
+
+		scene::IMeshBuffer *buf = m_mesh[it.first.first]->getMeshBuffer(it.first.second);
+
+		bool hide = (it.second.liquid_source_id == liquid_source_id) &&
+				(it.second.liquid_flowing_id == liquid_flowing_id);
+		if (it.second.hidden != hide) {
+			if (hide) {
+				buf->getMaterial().setTexture(0, m_texture_blank);
+				if (m_enable_shaders) {
+					if (tile.normal_texture)
+						buf->getMaterial().setTexture(1, m_texture_blank);
+					buf->getMaterial().setTexture(2, m_texture_blank);
+				}
+			}
+			else {
+				buf->getMaterial().setTexture(0, tile.texture);
+				if (m_enable_shaders) {
+					if (tile.normal_texture)
+						buf->getMaterial().setTexture(1, tile.normal_texture);
+					buf->getMaterial().setTexture(2, tile.flags_texture);
+				}
+			}
+			it.second.hidden = hide;
+		}
+	}
 }
 
 void MapBlockMesh::updateTransparentBuffers(v3f camera_pos, v3s16 block_pos)
