@@ -387,6 +387,7 @@ class GameGlobalShaderConstantSetter : public IShaderConstantSetter
 		m_animation_timer_delta_pixel{"animationTimerDelta"};
 	CachedPixelShaderSetting<float, 3> m_day_light{"dayLight"};
 	CachedPixelShaderSetting<float, 4> m_star_color{"starColor"};
+	CachedPixelShaderSetting<float, 3> m_ambient_color{"ambientColor"};
 	CachedPixelShaderSetting<float, 3> m_eye_position_pixel{"eyePosition"};
 	CachedVertexShaderSetting<float, 3> m_eye_position_vertex{"eyePosition"};
 	CachedPixelShaderSetting<float, 3> m_minimap_yaw{"yawVec"};
@@ -503,6 +504,15 @@ public:
 		video::SColorf star_color = m_sky->getCurrentStarColor();
 		float clr[4] = {star_color.r, star_color.g, star_color.b, star_color.a};
 		m_star_color.set(clr, services);
+
+		video::SColor ambient_color = m_client->getEnv().getLocalPlayer()->getLighting().ambient_light.color;
+
+		float ac_f[3] = {
+			ambient_color.getRed()/255.f,
+			ambient_color.getGreen()/255.f,
+			ambient_color.getBlue()/255.f
+		};
+		m_ambient_color.set(ac_f, services);
 
 		u32 animation_timer = m_client->getEnv().getFrameTime() % 1000000;
 		float animation_timer_f = (float)animation_timer / 100000.f;
