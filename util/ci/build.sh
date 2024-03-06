@@ -2,6 +2,7 @@
 
 cmake -B build \
 	-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Debug} \
+	-DCMAKE_CXX_FLAGS='-fsanitize=address -fno-sanitize=vptr -fno-omit-frame-pointer' \
 	-DENABLE_LTO=FALSE \
 	-DRUN_IN_PLACE=TRUE \
 	-DENABLE_GETTEXT=${CMAKE_ENABLE_GETTEXT:-TRUE} \
