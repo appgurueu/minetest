@@ -108,7 +108,7 @@ local function get_formspec(_, _, tabdata)
 	end
 
 	if tabdata.selected then
-		if _G.gamedata.fav then
+		if gamedata.fav then
 			retval = retval .. "tooltip[btn_delete_favorite;" .. fgettext("Remove favorite") .. "]"
 			retval = retval .. "style[btn_delete_favorite;padding=6]"
 			retval = retval .. "image_button[4.5,1.3;0.5,0.5;" .. core.formspec_escape(defaulttexturedir ..
@@ -119,12 +119,12 @@ local function get_formspec(_, _, tabdata)
 				core.formspec_escape(_G.gamedata.serverdescription) .. "]"
 		end
 
-		function shortenTable(clients_list)
+		local function shortenTable(clients_list)
 			local short_clients_list = {}
 			for i = 1, math.min(5, #clients_list) do
-        		short_clients_list[i] = clients_list[i]
-   			end
-      		return short_clients_list
+				short_clients_list[i] = clients_list[i]
+			end
+			return short_clients_list
 		end
 
 		local idx = core.get_table_index("servers")
@@ -344,7 +344,7 @@ local function main_button_handler(tabview, fields, name, tabdata)
 	end
 
 	if fields.btn_print_clients then
-		local dlg = create_clientslist_dialog(Server)
+		local dlg = create_clientslist_dialog()
 		dlg:set_parent(tabview)
 		tabview:hide()
 		dlg:show()
