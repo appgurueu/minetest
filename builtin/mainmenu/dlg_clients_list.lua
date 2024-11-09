@@ -1,6 +1,11 @@
 local function clients_list_formspec(dialogdata)
+	if not dialogdata or dialogdata.server == nil then
+		return "size[10,11]" ..
+			"button[3.5,10.25;3,0.8;dlg_clients_list_exit;OK]" ..
+			"label[4,0.5;Error: Server data is missing]"
+	end
 	local clients_list = dialogdata.server.clients_list
-	local servername  = dialogdata.server.name
+	local servername   = dialogdata.server.name
 
 	local function fmt_formspec_list(clients_list)
 		local escaped = {}
@@ -32,9 +37,10 @@ end
 --------------------------------------------------------------------------------
 
 function create_clientslist_dialog(server)
-	return dialog_create("dlg_clients_list",
+	local retval = dialog_create("dlg_clients_list",
 		clients_list_formspec,
 		clients_list_buttonhandler,
 		nil)
+	retval.data.server = server
 	return retval
 end

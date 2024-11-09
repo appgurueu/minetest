@@ -65,13 +65,15 @@ local function get_formspec(_, _, tabdata)
 	end
 
 	local retval =
-		-- Search
+	-- Search
 		"field[0.25,0.25;7,0.75;te_search;;" .. core.formspec_escape(tabdata.search_for) .. "]" ..
 		"field_enter_after_edit[te_search;true]" ..
 		"container[7.25,0.25]" ..
 		"image_button[0,0;0.75,0.75;" .. core.formspec_escape(defaulttexturedir .. "search.png") .. ";btn_mp_search;]" ..
-		"image_button[0.75,0;0.75,0.75;" .. core.formspec_escape(defaulttexturedir .. "clear.png") .. ";btn_mp_clear;]" ..
-		"image_button[1.5,0;0.75,0.75;" .. core.formspec_escape(defaulttexturedir .. "refresh.png") .. ";btn_mp_refresh;]" ..
+		"image_button[0.75,0;0.75,0.75;" ..
+		core.formspec_escape(defaulttexturedir .. "clear.png") .. ";btn_mp_clear;]" ..
+		"image_button[1.5,0;0.75,0.75;" ..
+		core.formspec_escape(defaulttexturedir .. "refresh.png") .. ";btn_mp_refresh;]" ..
 		"tooltip[btn_mp_clear;" .. fgettext("Clear") .. "]" ..
 		"tooltip[btn_mp_search;" .. fgettext("Search") .. "]" ..
 		"tooltip[btn_mp_refresh;" .. fgettext("Refresh") .. "]" ..
@@ -84,13 +86,13 @@ local function get_formspec(_, _, tabdata)
 		"label[0.25,0.35;" .. fgettext("Address") .. "]" ..
 		"label[4.25,0.35;" .. fgettext("Port") .. "]" ..
 		"field[0.25,0.5;4,0.75;te_address;;" ..
-			core.formspec_escape(core.settings:get("address")) .. "]" ..
+		core.formspec_escape(core.settings:get("address")) .. "]" ..
 		"field[4.25,0.5;1.25,0.75;te_port;;" ..
-			core.formspec_escape(core.settings:get("remote_port")) .. "]" ..
+		core.formspec_escape(core.settings:get("remote_port")) .. "]" ..
 
 		-- Description Background
 		"label[0.25,1.6;" .. fgettext("Server Description") .. "]" ..
-		"box[0.25,1.85;5.25,2.7;#999999]"..
+		"box[0.25,1.85;5.25,2.7;#999999]" ..
 
 		-- Name / Password
 		"container[0,4.8]" ..
@@ -162,7 +164,7 @@ local function get_formspec(_, _, tabdata)
 		"6=" .. core.formspec_escape(defaulttexturedir .. "server_public.png") .. "," ..
 		"7=" .. core.formspec_escape(defaulttexturedir .. "server_incompatible.png") .. ";" ..
 		"color,span=1;" ..
-		"text,align=inline;"..
+		"text,align=inline;" ..
 		"color,span=1;" ..
 		"text,align=inline,width=4.25;" ..
 		"image,tooltip=" .. fgettext("Creative mode") .. "," ..
@@ -184,9 +186,9 @@ local function get_formspec(_, _, tabdata)
 	local dividers = {
 		fav = "5,#ffff00," .. fgettext("Favorites") .. ",,,0,0,,",
 		public = "6,#4bdd42," .. fgettext("Public Servers") .. ",,,0,0,,",
-		incompatible = "7,"..mt_color_grey.."," .. fgettext("Incompatible Servers") .. ",,,0,0,,"
+		incompatible = "7," .. mt_color_grey .. "," .. fgettext("Incompatible Servers") .. ",,,0,0,,"
 	}
-	local order = {"fav", "public", "incompatible"}
+	local order = { "fav", "public", "incompatible" }
 
 	tabdata.lookup = {} -- maps row number to server
 	local rows = {}
@@ -238,13 +240,13 @@ local function search_server_list(input)
 		local name_matches, description_matches = true, true
 		for _, keyword in ipairs(keywords) do
 			name_matches = name_matches and not not
-					(server.name or ""):lower():find(keyword, 1, true)
+				(server.name or ""):lower():find(keyword, 1, true)
 			description_matches = description_matches and not not
-					(server.description or ""):lower():find(keyword, 1, true)
+				(server.description or ""):lower():find(keyword, 1, true)
 		end
 		if name_matches or description_matches then
 			server.points = #serverlistmgr.servers - i
-					+ (name_matches and 50 or 0)
+				+ (name_matches and 50 or 0)
 			table.insert(search_result, server)
 		end
 	end
@@ -269,11 +271,11 @@ local function set_selected_server(tabdata, idx, server)
 		return
 	end
 
-	local address = server.address
-	local port    = server.port
+	local address              = server.address
+	local port                 = server.port
 	gamedata.serverdescription = server.description
 
-	gamedata.fav = false
+	gamedata.fav               = false
 	for _, fav in ipairs(serverlistmgr.get_favorites()) do
 		if address == fav.address and port == fav.port then
 			gamedata.fav = true
@@ -301,13 +303,13 @@ local function main_button_handler(tabview, fields, name, tabdata)
 		if server then
 			if event.type == "DCL" then
 				if not is_server_protocol_compat_or_error(
-							server.proto_min, server.proto_max) then
+						server.proto_min, server.proto_max) then
 					return true
 				end
 
-				gamedata.address    = server.address
-				gamedata.port       = server.port
-				gamedata.playername = fields.te_name
+				gamedata.address        = server.address
+				gamedata.port           = server.port
+				gamedata.playername     = fields.te_name
 				gamedata.selected_world = 0
 
 				if fields.te_pwd then
@@ -339,7 +341,7 @@ local function main_button_handler(tabview, fields, name, tabdata)
 
 		serverlistmgr.delete_favorite(server)
 		-- the server at [idx+1] will be at idx once list is refreshed
-		set_selected_server(tabdata, idx, tabdata.lookup[idx+1])
+		set_selected_server(tabdata, idx, tabdata.lookup[idx + 1])
 		return true
 	end
 
@@ -377,30 +379,29 @@ local function main_button_handler(tabview, fields, name, tabdata)
 	local te_port_number = tonumber(fields.te_port)
 
 	if (fields.btn_mp_login or fields.key_enter) and host_filled then
-		gamedata.playername = fields.te_name
-		gamedata.password   = fields.te_pwd
-		gamedata.address    = fields.te_address
-		gamedata.port       = te_port_number
+		gamedata.playername               = fields.te_name
+		gamedata.password                 = fields.te_pwd
+		gamedata.address                  = fields.te_address
+		gamedata.port                     = te_port_number
 
 		local enable_split_login_register = core.settings:get_bool("enable_split_login_register")
-		gamedata.allow_login_or_register = enable_split_login_register and "login" or "any"
-		gamedata.selected_world = 0
+		gamedata.allow_login_or_register  = enable_split_login_register and "login" or "any"
+		gamedata.selected_world           = 0
 
-		local idx = core.get_table_index("servers")
-		local server = idx and tabdata.lookup[idx]
+		local idx                         = core.get_table_index("servers")
+		local server                      = idx and tabdata.lookup[idx]
 
 		set_selected_server(tabdata)
 
 		if server and server.address == gamedata.address and
-				server.port == gamedata.port then
-
+			server.port == gamedata.port then
 			serverlistmgr.add_favorite(server)
 
 			gamedata.servername        = server.name
 			gamedata.serverdescription = server.description
 
 			if not is_server_protocol_compat_or_error(
-						server.proto_min, server.proto_max) then
+					server.proto_min, server.proto_max) then
 				return true
 			end
 		else
@@ -413,7 +414,7 @@ local function main_button_handler(tabview, fields, name, tabdata)
 			})
 		end
 
-		core.settings:set("address",     gamedata.address)
+		core.settings:set("address", gamedata.address)
 		core.settings:set("remote_port", gamedata.port)
 
 		core.start()
@@ -428,7 +429,7 @@ local function main_button_handler(tabview, fields, name, tabdata)
 		end
 
 		if server and not is_server_protocol_compat_or_error(
-					server.proto_min, server.proto_max) then
+				server.proto_min, server.proto_max) then
 			return true
 		end
 
