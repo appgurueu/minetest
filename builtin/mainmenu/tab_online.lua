@@ -344,7 +344,7 @@ local function main_button_handler(tabview, fields, name, tabdata)
 	end
 
 	if fields.btn_print_clients then
-		local dlg = create_clientslist_dialog()
+		local dlg = create_clientslist_dialog(server)
 		dlg:set_parent(tabview)
 		tabview:hide()
 		dlg:show()
