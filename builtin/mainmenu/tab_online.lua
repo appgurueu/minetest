@@ -114,9 +114,9 @@ local function get_formspec(_, _, tabdata)
 			retval = retval .. "image_button[4.5,1.3;0.5,0.5;" .. core.formspec_escape(defaulttexturedir ..
 				"server_favorite_delete.png") .. ";btn_delete_favorite;]"
 		end
-		if _G.gamedata.serverdescription then
+		if gamedata.serverdescription then
 			retval = retval .. "textarea[0.25,1.85;5.25,2.7;;;" ..
-				core.formspec_escape(_G.gamedata.serverdescription) .. "]"
+				core.formspec_escape(gamedata.serverdescription) .. "]"
 		end
 
 		local function shortenTable(clients_list)
