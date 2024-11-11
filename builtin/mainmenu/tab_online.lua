@@ -136,7 +136,11 @@ local function get_formspec(tabview, name, tabdata)
 				return string.lower(a) < string.lower(b)
 			end)
 			local clients_string = table.concat(shortenTable(server.clients_list), "\n")
-			retval = retval .. "tooltip[btn_print_clients;" .. fgettext("Clients:\n$1", clients_string) .. "]"
+			if #server.clients_list >= 5 then
+				retval = retval .. "tooltip[btn_print_clients;" .. fgettext("Clients:\n$1", clients_string) .. "\n..." .. "]"
+			else
+				retval = retval .. "tooltip[btn_print_clients;" .. fgettext("Clients:\n$1", table.concat(server.clients_list, "\n")) .. "]"
+			end
 			retval = retval .. "style[btn_print_clients;padding=6]"
 			retval = retval .. "image_button[5,1.3;0.5,0.5;" .. core.formspec_escape(defaulttexturedir ..
 				"server_view_clients.png") .. ";btn_print_clients;]"
