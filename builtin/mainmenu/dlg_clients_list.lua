@@ -41,6 +41,7 @@ end
 local function clients_list_buttonhandler(this, fields)
 	if fields.quit or fields["dlg_clients_list_exit"] then
         this:delete()
+        serverlistmgr.sync()
 		return true
 	end
 	return false
