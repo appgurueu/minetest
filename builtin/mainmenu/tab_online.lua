@@ -55,7 +55,7 @@ local function get_sorted_servers()
 	return servers
 end
 
-local function get_formspec(_, _, tabdata)
+local function get_formspec(tabview, name, tabdata)
 	-- Update the cached supported proto info,
 	-- it may have changed after a change by the settings menu.
 	common_update_cached_supp_proto()
@@ -129,10 +129,8 @@ local function get_formspec(_, _, tabdata)
 			return short_clients_list
 		end
 
-		local idx = core.get_table_index("servers")
-		if not idx then return end
-		local server = idx and tabdata.lookup[idx]
-		if not server then return end
+		local server = tabdata.lookup[tabdata.selected]
+
 		if server.clients_list then
 			table.sort(server.clients_list, function(a, b)
 				return string.lower(a) < string.lower(b)
@@ -141,12 +139,12 @@ local function get_formspec(_, _, tabdata)
 			retval = retval .. "tooltip[btn_print_clients;" .. fgettext("Clients:\n$1", clients_string) .. "]"
 			retval = retval .. "style[btn_print_clients;padding=6]"
 			retval = retval .. "image_button[5,1.3;0.5,0.5;" .. core.formspec_escape(defaulttexturedir ..
-				"server_print_clients.png") .. ";btn_print_clients;]"
+				"server_view_clients.png") .. ";btn_print_clients;]"
 		else
 			retval = retval .. "tooltip[btn_no_clients;" .. fgettext("Clients not available.") .. "]"
 			retval = retval .. "style[btn_no_clients;padding=6]"
 			retval = retval .. "image_button[5,1.3;0.5,0.5;" .. core.formspec_escape(defaulttexturedir ..
-				"server_print_clients_gray.png") .. ";btn_no_clients;]"
+				"server_view_clients_disabled.png") .. ";btn_no_clients;]"
 		end
 	end
 
@@ -346,7 +344,7 @@ local function main_button_handler(tabview, fields, name, tabdata)
 	end
 
 	if fields.btn_print_clients then
-		local dlg = create_clientslist_dialog(server)
+		local dlg = create_clientslist_dialog(tabdata.lookup[tabdata.selected])
 		dlg:set_parent(tabview)
 		tabview:hide()
 		dlg:show()

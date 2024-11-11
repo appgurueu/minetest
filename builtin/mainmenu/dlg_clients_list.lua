@@ -1,9 +1,23 @@
+--Luanti
+--Copyright (C) 2024 siliconsniffer
+--
+--This program is free software; you can redistribute it and/or modify
+--it under the terms of the GNU Lesser General Public License as published by
+--the Free Software Foundation; either version 2.1 of the License, or
+--(at your option) any later version.
+--
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Lesser General Public License for more details.
+--
+--You should have received a copy of the GNU Lesser General Public License along
+--with this program; if not, write to the Free Software Foundation, Inc.,
+--51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+--------------------------------------------------------------------------------
+
 local function clients_list_formspec(dialogdata)
-	if not dialogdata or dialogdata.server == nil then
-		return "size[10,11]" ..
-			"button[3.5,10.25;3,0.8;dlg_clients_list_exit;OK]" ..
-			"label[4,0.5;Error: Server data is missing]"
-	end
 	local clients_list = dialogdata.server.clients_list
 	local servername   = dialogdata.server.name
 
@@ -15,20 +29,18 @@ local function clients_list_formspec(dialogdata)
 		return table.concat(escaped, ",")
 	end
 
-	local list = "textlist[1,1;7.75,9;client_list;" .. fmt_formspec_list(clients_list) .. "]"
-
 	return
-		"size[10,11]" ..
-		"button[3.5,10.25;3,0.8;dlg_clients_list_exit;OK]" ..
-		"label[4,0.5;This is the clientlist from " .. fgettext(servername) .. "]" ..
-		list
+		"size[6,8]" ..
+		"hypertext[0.275,0;6,1;;<global halign=center>This is the list of clients from <b>" .. fgettext(servername) .. "]" ..
+		"textlist[0.4,0.5;5,7;;" .. fmt_formspec_list(clients_list) .. "]" ..
+		"button[1.5,7.6;3,0.8;dlg_clients_list_exit;OK]"
 end
 
 --------------------------------------------------------------------------------
 
 local function clients_list_buttonhandler(this, fields)
-	if fields.dlg_clients_list_exit then
-		this:delete()
+	if fields.quit or fields["dlg_clients_list_exit"] then
+        this:delete()
 		return true
 	end
 	return false
