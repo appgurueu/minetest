@@ -18,13 +18,37 @@
 local function get_sorted_servers()
 	local servers = {
 		fav = {},
+		visited = {},
 		public = {},
 		incompatible = {}
 	}
 
 	local favs = serverlistmgr.get_favorites()
 	local taken_favs = {}
+	local visited = serverlistmgr.get_visited()
+
 	local result = menudata.search_result or serverlistmgr.servers
+
+	for _, visit in ipairs(visited) do
+        -- Try to find matching server in the full server list to get additional info
+        local server_info = nil
+        for _, server in ipairs(result) do
+            if server.address == visit.address and server.port == visit.port then
+                server_info = table.copy(server)
+                break
+            end
+        end
+
+        -- If no matching server found, use visited info
+        if not server_info then
+            server_info = table.copy(visit)
+        end
+
+        server_info.is_compatible = is_server_protocol_compat(
+            server_info.proto_min, server_info.proto_max)
+        table.insert(servers.visited, server_info)
+    end
+
 	for _, server in ipairs(result) do
 		server.is_favorite = false
 		for index, fav in ipairs(favs) do
@@ -34,23 +58,34 @@ local function get_sorted_servers()
 				break
 			end
 		end
-		server.is_compatible = is_server_protocol_compat(server.proto_min, server.proto_max)
-		if server.is_favorite then
-			table.insert(servers.fav, server)
-		elseif server.is_compatible then
-			table.insert(servers.public, server)
-		else
-			table.insert(servers.incompatible, server)
-		end
+
+		local is_visited = false
+        for _, visit in ipairs(visited) do
+            if server.address == visit.address and server.port == visit.port then
+                is_visited = true
+                break
+            end
+        end
+
+        if not is_visited then  -- Only process non-visited servers
+			server.is_compatible = is_server_protocol_compat(server.proto_min, server.proto_max)
+            if server.is_favorite then
+                table.insert(servers.fav, server)
+            elseif server.is_compatible then
+                table.insert(servers.public, server)
+            else
+                table.insert(servers.incompatible, server)
+            end
+        end
 	end
 
 	if not menudata.search_result then
-		for index, fav in ipairs(favs) do
-			if not taken_favs[index] then
-				table.insert(servers.fav, fav)
-			end
-		end
-	end
+        for index, fav in ipairs(favs) do
+            if not taken_favs[index] then
+                table.insert(servers.fav, fav)
+            end
+        end
+    end
 
 	return servers
 end
@@ -211,8 +246,9 @@ local function get_formspec(tabview, name, tabdata)
 		"3=" .. core.formspec_escape(defaulttexturedir .. "server_ping_2.png") .. "," ..
 		"4=" .. core.formspec_escape(defaulttexturedir .. "server_ping_1.png") .. "," ..
 		"5=" .. core.formspec_escape(defaulttexturedir .. "server_favorite.png") .. "," ..
-		"6=" .. core.formspec_escape(defaulttexturedir .. "server_public.png") .. "," ..
-		"7=" .. core.formspec_escape(defaulttexturedir .. "server_incompatible.png") .. ";" ..
+		"6=" .. core.formspec_escape(defaulttexturedir .. "server_visited.png") .. "," ..
+		"7=" .. core.formspec_escape(defaulttexturedir .. "server_public.png") .. "," ..
+		"8=" .. core.formspec_escape(defaulttexturedir .. "server_incompatible.png") .. ";" ..
 		"color,span=1;" ..
 		"text,align=inline;"..
 		"color,span=1;" ..
@@ -235,10 +271,11 @@ local function get_formspec(tabview, name, tabdata)
 
 	local dividers = {
 		fav = "5,#ffff00," .. fgettext("Favorites") .. ",,,0,0,,",
-		public = "6,#4bdd42," .. fgettext("Public Servers") .. ",,,0,0,,",
-		incompatible = "7,"..mt_color_grey.."," .. fgettext("Incompatible Servers") .. ",,,0,0,,"
+		visited = "6,#ffaa00," .. fgettext("Visited Servers") .. ",,,0,0,,",
+		public = "7,#4bdd42," .. fgettext("Public Servers") .. ",,,0,0,,",
+		incompatible = "8,"..mt_color_grey.."," .. fgettext("Incompatible Servers") .. ",,,0,0,,"
 	}
-	local order = {"fav", "public", "incompatible"}
+	local order = {"fav", "visited", "public", "incompatible"}
 
 	tabdata.lookup = {} -- maps row number to server
 	local rows = {}
@@ -427,6 +464,7 @@ local function main_button_handler(tabview, fields, name, tabdata)
 				gamedata.serverdescription = server.description
 
 				if gamedata.address and gamedata.port then
+					serverlistmgr.add_visited(server)
 					set_selected_server(server)
 					core.start()
 				end
@@ -447,11 +485,9 @@ local function main_button_handler(tabview, fields, name, tabdata)
 	if fields.btn_delete_favorite then
 		local idx = core.get_table_index("servers")
 		if not idx then return end
-		local server = tabdata.lookup[idx]
-		if not server then return end
 
-		serverlistmgr.delete_favorite(server)
-		set_selected_server(server)
+		serverlistmgr.delete_favorite(tabdata.lookup[idx])
+		set_selected_server(tabdata.lookup[idx+1])
 		return true
 	end
 
@@ -476,12 +512,7 @@ local function main_button_handler(tabview, fields, name, tabdata)
 
 	if fields.btn_mp_search or fields.key_enter_field == "te_search" then
 		tabdata.search_for = fields.te_search
-		search_server_list(fields.te_search)
-		if menudata.search_result then
-			-- Note: This clears the selection if there are no results
-			set_selected_server(menudata.search_result[1])
-		end
-
+		search_server_list(fields.te_search:lower())
 		return true
 	end
 
@@ -494,6 +525,7 @@ local function main_button_handler(tabview, fields, name, tabdata)
 	local te_port_number = tonumber(fields.te_port)
 
 	if (fields.btn_mp_login or fields.key_enter) and host_filled then
+		print("Login section reached")  -- Debug print
 		gamedata.playername = fields.te_name
 		gamedata.password   = fields.te_pwd
 		gamedata.address    = fields.te_address
@@ -509,7 +541,8 @@ local function main_button_handler(tabview, fields, name, tabdata)
 		if server and server.address == gamedata.address and
 				server.port == gamedata.port then
 
-			serverlistmgr.add_favorite(server)
+			print("Adding server to visited (from server list): " .. dump(server)) -- Debug print
+			serverlistmgr.add_visited(server)
 
 			gamedata.servername        = server.name
 			gamedata.serverdescription = server.description
@@ -522,7 +555,7 @@ local function main_button_handler(tabview, fields, name, tabdata)
 			gamedata.servername        = ""
 			gamedata.serverdescription = ""
 
-			serverlistmgr.add_favorite({
+			serverlistmgr.add_visited({
 				address = gamedata.address,
 				port = gamedata.port,
 			})
