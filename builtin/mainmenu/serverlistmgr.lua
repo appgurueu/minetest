@@ -22,6 +22,9 @@ serverlistmgr = {
 	-- list of locally favorites servers
 	favorites = nil,
 
+	-- list of last visited servers
+	visited = nil,
+
 	-- list of servers fetched from public list
 	servers = nil,
 }
@@ -113,23 +116,39 @@ local function order_server_list_internal(list)
 end
 
 local function order_server_list(list)
-	-- split the list into two parts and sort them separately, to keep empty
-	-- servers at the bottom.
-	local nonempty, empty = {}, {}
+    -- split the list into three parts: visited, non-empty and empty servers
+    local visited, nonempty, empty = {}, {}, {}
 
-	for _, fav in ipairs(list) do
-		if (fav.clients or 0) > 0 then
-			table.insert(nonempty, fav)
-		else
-			table.insert(empty, fav)
-		end
-	end
+    for _, fav in ipairs(list) do
+        -- Check if server is in visited list
+        local is_visited = false
+        for _, visit in ipairs(serverlistmgr.get_visited()) do
+            if fav.address == visit.address and fav.port == visit.port then
+                is_visited = true
+                table.insert(visited, fav)
+                break
+            end
+        end
 
-	order_server_list_internal(nonempty)
-	order_server_list_internal(empty)
+        if not is_visited then
+            if (fav.clients or 0) > 0 then
+                table.insert(nonempty, fav)
+            else
+                table.insert(empty, fav)
+            end
+        end
+    end
 
-	table.insert_all(nonempty, empty)
-	return nonempty
+    -- Only sort the non-visited servers
+    order_server_list_internal(nonempty)
+    order_server_list_internal(empty)
+
+    -- Combine the lists: visited first (in chronological order), then sorted servers
+    local result = {}
+    table.insert_all(result, visited)
+    table.insert_all(result, nonempty)
+    table.insert_all(result, empty)
+    return result
 end
 
 local public_downloading = false
@@ -382,4 +401,56 @@ function serverlistmgr.delete_favorite(del_favorite)
 	local favorites = serverlistmgr.get_favorites()
 	delete_favorite(favorites, del_favorite)
 	save_favorites(favorites)
+end
+
+--------------------------------------------------------------------------------
+function serverlistmgr.get_visited()
+	if serverlistmgr.visited then
+		return serverlistmgr.visited
+	end
+
+	serverlistmgr.visited = {}
+
+	local path = get_favorites_path()
+	path = path:sub(1, #path - 5) .. "_visited.json"
+
+	local file = io.open(path, "r")
+	if not file then
+		return serverlistmgr.visited
+	end
+
+	local json = file:read("*all")
+	file:close()
+
+	serverlistmgr.visited = core.parse_json(json) or {}
+	return serverlistmgr.visited
+end
+
+--------------------------------------------------------------------------------
+function serverlistmgr.add_visited(new_visited)
+	assert(type(new_visited.port) == "number")
+
+	-- Whitelist visited keys
+	new_visited = {
+		name = new_visited.name,
+		address = new_visited.address,
+		port = new_visited.port,
+		description = new_visited.description,
+	}
+
+	local visited = serverlistmgr.get_visited()
+	delete_favorite(visited, new_visited)
+
+	-- Add the new visited server to the top of the list
+	table.insert(visited, 1, new_visited)
+
+	-- Keep only the 5 most recent servers
+    while #visited > 5 do
+        table.remove(visited)  -- Remove the last (oldest) entry
+    end
+
+    local path = get_favorites_path()
+	path = path:sub(1, #path - 5) .. "_visited.json"
+
+	core.safe_file_write(path, core.write_json(visited))
 end
