@@ -469,17 +469,13 @@ local function main_button_handler(tabview, fields, name, tabdata)
 	if fields.btn_mp_clear then
 		tabdata.search_for = ""
 		menudata.search_result = nil
+		set_selected_server(nil)
 		return true
 	end
 
 	if fields.btn_mp_search or fields.key_enter_field == "te_search" then
 		tabdata.search_for = fields.te_search
 		search_server_list(fields.te_search)
-		if menudata.search_result then
-			-- Note: This clears the selection if there are no results
-			set_selected_server(menudata.search_result[1])
-		end
-
 		return true
 	end
 
