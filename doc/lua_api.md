@@ -5747,6 +5747,8 @@ Utilities
       particle_blend_clip = true,
       -- The `match_meta` optional parameter is available for `InvRef:remove_item()` (5.12.0)
       remove_item_match_meta = true,
+      -- objects have get_guid method and lua entities alse set_guid method (5.12.0)
+      have_guids = true,
   }
   ```
 
@@ -7768,6 +7770,8 @@ Global tables
       as they are only read when spawning.
 * `core.object_refs`
     * Map of object references, indexed by active object id
+* `core.objects_by_guid`
+    * Map of object references, indexed by active object GUID
 * `core.luaentities`
     * Map of Lua entities, indexed by active object id
 * `core.registered_abms`
@@ -8465,6 +8469,9 @@ child will follow movement and rotation of that bone.
           -- Default: false
       }
       ```
+* `get_guid()`: returns a global unique identifier (a string)
+    * For players this is a player name.
+    * For Lua entities, it is a unique generated string.
 
 #### Lua entity only (no-op for other objects)
 
@@ -8472,6 +8479,10 @@ child will follow movement and rotation of that bone.
     * The object is removed after returning from Lua. However the `ObjectRef`
       itself instantly becomes unusable with all further method calls having
       no effect and returning `nil`.
+* `set_guid(guid)`:
+    * Set a global unique identifier string of entity.
+    * Is valid to be called only in `on_activate` callback.
+    * Should be used ONLY for restoring saved guid from staticdata!!!
 * `set_velocity(vel)`
     * Sets the velocity
     * `vel` is a vector, e.g. `{x=0.0, y=2.3, z=1.0}`
