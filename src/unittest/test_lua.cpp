@@ -5,6 +5,7 @@
 
 #include "test.h"
 #include "config.h"
+#include "catch.h"
 
 #include <stdexcept>
 
@@ -18,43 +19,17 @@ extern "C" {
 }
 
 /*
- * This class tests for two common issues that prevent correct error handling
+ * Test for two common issues that prevent correct error handling
  * between Lua and C++.
  * Further reading:
  * - https://luajit.org/extensions.html#exceptions
  * - http://lua-users.org/wiki/ErrorHandlingBetweenLuaAndCplusplus
  */
 
-class TestLua : public TestBase
+TEST_CASE("Lua unwinds the stack correctly when it throws errors internally",
+		// (This is not the case with PUC Lua unless it was compiled as C++.)
+		"[lua-destructors]")
 {
-public:
-	TestLua() { TestManager::registerTestModule(this); }
-	const char *getName() { return "TestLua"; }
-
-	void runTests(IGameDef *gamedef);
-
-	void testLuaDestructors();
-	void testCxxExceptions();
-};
-
-static TestLua g_test_instance;
-
-void TestLua::runTests(IGameDef *gamedef)
-{
-	TEST(testLuaDestructors);
-	TEST(testCxxExceptions);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/*
-	Check that Lua unwinds the stack correctly when it throws errors internally.
-	(This is not the case with PUC Lua unless it was compiled as C++.)
-*/
-
-namespace
-{
-
 	class DestructorDetector {
 		bool *did_destruct;
 	public:
@@ -68,10 +43,6 @@ namespace
 		}
 	};
 
-}
-
-void TestLua::testLuaDestructors()
-{
 	bool did_destruct = false;
 
 	lua_State *L = luaL_newstate();
@@ -82,31 +53,25 @@ void TestLua::testLuaDestructors()
 	}, &did_destruct);
 	lua_close(L);
 
-	UASSERT(did_destruct);
+	CHECK(did_destruct);
 }
 
-namespace {
-
-	int wrapper(lua_State *L, lua_CFunction inner)
-	{
-		try {
-			return inner(L);
-		} catch (std::exception &e) {
-			lua_pushstring(L, e.what());
-			return lua_error(L);
-		}
-	}
-
-}
-
-/*
-	Check that C++ exceptions are caught and re-thrown as Lua errors.
-	This is handled by a wrapper we define ourselves.
-	(PUC Lua does not support use of such a wrapper, we have a patched version)
-*/
-
-void TestLua::testCxxExceptions()
+static int wrapper(lua_State *L, lua_CFunction inner)
 {
+	try {
+		return inner(L);
+	} catch (std::exception &e) {
+		lua_pushstring(L, e.what());
+		return lua_error(L);
+	}
+}
+
+TEST_CASE("C++ exceptions are caught and re-thrown as Lua errors",
+		// This is handled by a wrapper we define ourselves.
+		// (PUC Lua does not support use of such a wrapper, we have a patched version)
+		"[lua-exceptions]")
+{
+
 	lua_State *L = luaL_newstate();
 
 #if USE_LUAJIT
