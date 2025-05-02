@@ -322,7 +322,11 @@ Many glTF features are not supported *yet*, including:
   * `CUBICSPLINE` interpolation is not supported.
 * Cameras
 * Materials
-  * Only base color textures are supported
+  * Base color textures are supported
+  * Minification & magnification filters are supported.
+    If omitted, Luanti is free to choose a filter based on user settings.
+    Rejecting mipmapping for a material is possible this way.
+    But enabling mipmapping if it has been globally disabled is not possible.
   * Backface culling is overridden
   * Double-sided materials don't work
 * Alternative means of supplying data

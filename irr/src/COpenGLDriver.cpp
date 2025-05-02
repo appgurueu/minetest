@@ -6,6 +6,7 @@
 #include <cassert>
 #include "CNullDriver.h"
 #include "IContextManager.h"
+#include "SMaterialLayer.h"
 
 #ifdef _IRR_COMPILE_WITH_OPENGL_
 
@@ -2179,8 +2180,8 @@ void COpenGLDriver::setTextureRenderStates(const SMaterial &material, bool reset
 			}
 #endif
 
-			if (!statesCache.IsCached || material.TextureLayers[i].MagFilter != statesCache.MagFilter) {
-				E_TEXTURE_MAG_FILTER magFilter = material.TextureLayers[i].MagFilter;
+			E_TEXTURE_MAG_FILTER magFilter = material.TextureLayers[i].getEffectiveMagFilter();
+			if (!statesCache.IsCached || magFilter != statesCache.MagFilter) {
 				glTexParameteri(tmpType, GL_TEXTURE_MAG_FILTER,
 						magFilter == ETMAGF_NEAREST ? GL_NEAREST : (assert(magFilter == ETMAGF_LINEAR), GL_LINEAR));
 
@@ -2188,9 +2189,9 @@ void COpenGLDriver::setTextureRenderStates(const SMaterial &material, bool reset
 			}
 
 			if (material.UseMipMaps && tmpTexture->hasMipMaps()) {
-				if (!statesCache.IsCached || material.TextureLayers[i].MinFilter != statesCache.MinFilter ||
+				E_TEXTURE_MIN_FILTER minFilter = material.TextureLayers[i].getEffectiveMinFilter();
+				if (!statesCache.IsCached || minFilter != statesCache.MinFilter ||
 						!statesCache.MipMapStatus) {
-					E_TEXTURE_MIN_FILTER minFilter = material.TextureLayers[i].MinFilter;
 					glTexParameteri(tmpType, GL_TEXTURE_MIN_FILTER,
 							minFilter == ETMINF_NEAREST_MIPMAP_NEAREST ? GL_NEAREST_MIPMAP_NEAREST : minFilter == ETMINF_LINEAR_MIPMAP_NEAREST ? GL_LINEAR_MIPMAP_NEAREST
 																							 : minFilter == ETMINF_NEAREST_MIPMAP_LINEAR       ? GL_NEAREST_MIPMAP_LINEAR
@@ -2200,9 +2201,9 @@ void COpenGLDriver::setTextureRenderStates(const SMaterial &material, bool reset
 					statesCache.MipMapStatus = true;
 				}
 			} else {
-				if (!statesCache.IsCached || material.TextureLayers[i].MinFilter != statesCache.MinFilter ||
+				E_TEXTURE_MIN_FILTER minFilter = material.TextureLayers[i].getEffectiveMinFilter();
+				if (!statesCache.IsCached || minFilter != statesCache.MinFilter ||
 						statesCache.MipMapStatus) {
-					E_TEXTURE_MIN_FILTER minFilter = material.TextureLayers[i].MinFilter;
 					glTexParameteri(tmpType, GL_TEXTURE_MIN_FILTER,
 							(minFilter == ETMINF_NEAREST_MIPMAP_NEAREST || minFilter == ETMINF_NEAREST_MIPMAP_LINEAR) ? GL_NEAREST : (assert(minFilter == ETMINF_LINEAR_MIPMAP_NEAREST || minFilter == ETMINF_LINEAR_MIPMAP_LINEAR), GL_LINEAR));
 

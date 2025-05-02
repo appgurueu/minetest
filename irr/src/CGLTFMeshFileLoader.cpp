@@ -385,17 +385,83 @@ static std::vector<u16> generateIndices(const std::size_t nVerts)
 }
 
 using Wrap = tiniergltf::Sampler::Wrap;
-static video::E_TEXTURE_CLAMP convertTextureWrap(const Wrap wrap) {
+static video::E_TEXTURE_CLAMP convertTextureWrap(const Wrap wrap)
+{
 	switch (wrap) {
-		case Wrap::REPEAT:
-			return video::ETC_REPEAT;
-		case Wrap::CLAMP_TO_EDGE:
-			return video::ETC_CLAMP_TO_EDGE;
-		case Wrap::MIRRORED_REPEAT:
-            return video::ETC_MIRROR;
-		default:
-			throw std::runtime_error("invalid sampler wrapping mode");
-    }
+	case Wrap::REPEAT:
+		return video::ETC_REPEAT;
+	case Wrap::CLAMP_TO_EDGE:
+		return video::ETC_CLAMP_TO_EDGE;
+	case Wrap::MIRRORED_REPEAT:
+		return video::ETC_MIRROR;
+	default:
+		IRR_CODE_UNREACHABLE();
+	}
+}
+
+using MagFilter = tiniergltf::Sampler::MagFilter;
+static video::E_TEXTURE_MAG_FILTER convertMagFilter(const MagFilter filter)
+{
+	switch (filter) {
+	case MagFilter::NEAREST:
+		return video::ETMAGF_NEAREST;
+	case MagFilter::LINEAR:
+		return video::ETMAGF_LINEAR;
+	default:
+		IRR_CODE_UNREACHABLE();
+	}
+}
+
+using MinFilter = tiniergltf::Sampler::MinFilter;
+static video::E_TEXTURE_MIN_FILTER convertMinFilter(const MinFilter filter)
+{
+	switch (filter) {
+	case MinFilter::NEAREST:
+		return video::ETMINF_NEAREST_MIPMAP_NEAREST;
+	case MinFilter::LINEAR:
+		return video::ETMINF_LINEAR_MIPMAP_LINEAR;
+	case MinFilter::NEAREST_MIPMAP_NEAREST:
+		return video::ETMINF_NEAREST_MIPMAP_NEAREST;
+	case MinFilter::LINEAR_MIPMAP_NEAREST:
+		return video::ETMINF_LINEAR_MIPMAP_NEAREST;
+	case MinFilter::NEAREST_MIPMAP_LINEAR:
+		return video::ETMINF_NEAREST_MIPMAP_LINEAR;
+	case MinFilter::LINEAR_MIPMAP_LINEAR:
+		return video::ETMINF_LINEAR_MIPMAP_LINEAR;
+	default:
+		IRR_CODE_UNREACHABLE();
+	}
+}
+
+static bool useMipMaps(const MinFilter filter)
+{
+	switch (filter) {
+	case MinFilter::NEAREST:
+	case MinFilter::LINEAR:
+		return false;
+	case MinFilter::NEAREST_MIPMAP_NEAREST:
+	case MinFilter::LINEAR_MIPMAP_NEAREST:
+	case MinFilter::NEAREST_MIPMAP_LINEAR:
+	case MinFilter::LINEAR_MIPMAP_LINEAR:
+		return true;
+	default:
+		IRR_CODE_UNREACHABLE();
+	}
+}
+
+static void loadSampler(video::SMaterial &material, const tiniergltf::Sampler &sampler)
+{
+	auto &layer = material.TextureLayers[0];
+	layer.TextureWrapU = convertTextureWrap(sampler.wrapS);
+	layer.TextureWrapV = convertTextureWrap(sampler.wrapT);
+	if (auto minFilter = sampler.minFilter) {
+		layer.MinFilter = convertMinFilter(*minFilter);
+		// TODO the engine probably shits on this
+		material.UseMipMaps = useMipMaps(*minFilter);
+	}
+	if (auto magFilter = sampler.magFilter) {
+		layer.MagFilter = convertMagFilter(*magFilter);
+	}
 }
 
 void SelfType::MeshExtractor::addPrimitive(
@@ -427,18 +493,14 @@ void SelfType::MeshExtractor::addPrimitive(
 	m_irr_model->addMeshBuffer(meshbuf);
 	const auto meshbufNr = m_irr_model->getMeshBufferCount() - 1;
 
-	if (primitive.material.has_value()) {
-		const auto &material = m_gltf_model.materials->at(*primitive.material);
-		if (material.pbrMetallicRoughness.has_value()) {
-			const auto &texture = material.pbrMetallicRoughness->baseColorTexture;
-			if (texture.has_value()) {
+	if (const auto materialIdx = primitive.material) {
+		if (const auto &pbr = m_gltf_model.materials->at(*materialIdx).pbrMetallicRoughness) {
+			if (const auto &texture = pbr->baseColorTexture) {
 				m_irr_model->setTextureSlot(meshbufNr, static_cast<u32>(texture->index));
-				const auto samplerIdx = m_gltf_model.textures->at(texture->index).sampler;
-				if (samplerIdx.has_value()) {
-					auto &sampler = m_gltf_model.samplers->at(*samplerIdx);
-					auto &layer = meshbuf->getMaterial().TextureLayers[0];
-					layer.TextureWrapU = convertTextureWrap(sampler.wrapS);
-					layer.TextureWrapV = convertTextureWrap(sampler.wrapT);
+				if (const auto samplerIdx = m_gltf_model.textures.value().at(texture->index).sampler) {
+					const auto &sampler = m_gltf_model.samplers.value().at(*samplerIdx);
+					auto &material = meshbuf->getMaterial();
+					loadSampler(material, sampler);
 				}
 			}
 		}

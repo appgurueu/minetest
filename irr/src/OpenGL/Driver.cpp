@@ -1380,8 +1380,8 @@ void COpenGL3DriverBase::setTextureRenderStates(const SMaterial &material, bool 
 		if (resetAllRenderstates)
 			states.IsCached = false;
 
-		if (!states.IsCached || layer.MagFilter != states.MagFilter) {
-			E_TEXTURE_MAG_FILTER magFilter = layer.MagFilter;
+		E_TEXTURE_MAG_FILTER magFilter = layer.getEffectiveMagFilter();
+		if (!states.IsCached || magFilter != states.MagFilter) {
 			GL.TexParameteri(tmpTextureType, GL_TEXTURE_MAG_FILTER,
 					magFilter == ETMAGF_NEAREST ? GL_NEAREST : (assert(magFilter == ETMAGF_LINEAR), GL_LINEAR));
 
@@ -1389,9 +1389,9 @@ void COpenGL3DriverBase::setTextureRenderStates(const SMaterial &material, bool 
 		}
 
 		if (material.UseMipMaps && tmpTexture->hasMipMaps()) {
-			if (!states.IsCached || layer.MinFilter != states.MinFilter ||
+			E_TEXTURE_MIN_FILTER minFilter = layer.getEffectiveMinFilter();
+			if (!states.IsCached || minFilter != states.MinFilter ||
 					!states.MipMapStatus) {
-				E_TEXTURE_MIN_FILTER minFilter = layer.MinFilter;
 				GL.TexParameteri(tmpTextureType, GL_TEXTURE_MIN_FILTER,
 						minFilter == ETMINF_NEAREST_MIPMAP_NEAREST ? GL_NEAREST_MIPMAP_NEAREST : minFilter == ETMINF_LINEAR_MIPMAP_NEAREST ? GL_LINEAR_MIPMAP_NEAREST
 																						 : minFilter == ETMINF_NEAREST_MIPMAP_LINEAR       ? GL_NEAREST_MIPMAP_LINEAR
@@ -1401,9 +1401,9 @@ void COpenGL3DriverBase::setTextureRenderStates(const SMaterial &material, bool 
 				states.MipMapStatus = true;
 			}
 		} else {
-			if (!states.IsCached || layer.MinFilter != states.MinFilter ||
+			E_TEXTURE_MIN_FILTER minFilter = layer.getEffectiveMinFilter();
+			if (!states.IsCached || minFilter != states.MinFilter ||
 					states.MipMapStatus) {
-				E_TEXTURE_MIN_FILTER minFilter = layer.MinFilter;
 				GL.TexParameteri(tmpTextureType, GL_TEXTURE_MIN_FILTER,
 						(minFilter == ETMINF_NEAREST_MIPMAP_NEAREST || minFilter == ETMINF_NEAREST_MIPMAP_LINEAR) ? GL_NEAREST : (assert(minFilter == ETMINF_LINEAR_MIPMAP_NEAREST || minFilter == ETMINF_LINEAR_MIPMAP_LINEAR), GL_LINEAR));
 

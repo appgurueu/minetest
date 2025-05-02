@@ -484,14 +484,12 @@ scene::IMesh* convertNodeboxesToMesh(const std::vector<aabb3f> &boxes,
 
 void setMaterialFilters(video::SMaterialLayer &tex, bool bilinear, bool trilinear, bool anisotropic)
 {
-	if (trilinear)
-		tex.MinFilter = video::ETMINF_LINEAR_MIPMAP_LINEAR;
-	else if (bilinear)
-		tex.MinFilter = video::ETMINF_LINEAR_MIPMAP_NEAREST;
-	else
-		tex.MinFilter = video::ETMINF_NEAREST_MIPMAP_NEAREST;
+	tex.suggestMinFilter(
+			trilinear ? video::ETMINF_LINEAR_MIPMAP_LINEAR
+			: bilinear ? video::ETMINF_LINEAR_MIPMAP_NEAREST
+			: video::ETMINF_NEAREST_MIPMAP_NEAREST);
 
-	tex.MagFilter = (trilinear || bilinear) ? video::ETMAGF_LINEAR : video::ETMAGF_NEAREST;
+	tex.suggestMagFilter((trilinear || bilinear) ? video::ETMAGF_LINEAR : video::ETMAGF_NEAREST);
 
 	tex.AnisotropicFilter = anisotropic ? 0xFF : 0;
 }

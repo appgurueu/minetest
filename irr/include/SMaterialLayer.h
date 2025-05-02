@@ -5,6 +5,7 @@
 #pragma once
 
 #include "matrix4.h"
+#include <optional>
 
 namespace irr
 {
@@ -77,8 +78,30 @@ public:
 	//! Default constructor
 	SMaterialLayer() :
 			Texture(0), TextureWrapU(ETC_REPEAT), TextureWrapV(ETC_REPEAT), TextureWrapW(ETC_REPEAT),
-			MinFilter(ETMINF_LINEAR_MIPMAP_NEAREST), MagFilter(ETMAGF_LINEAR), AnisotropicFilter(0), LODBias(0), TextureMatrix(0)
+			AnisotropicFilter(0), LODBias(0), TextureMatrix(0)
 	{
+	}
+
+	void suggestMinFilter(E_TEXTURE_MIN_FILTER suggestion)
+	{
+		if (!MinFilter)
+			MinFilter = suggestion;
+	}
+
+	void suggestMagFilter(E_TEXTURE_MAG_FILTER suggestion)
+	{
+		if (!MagFilter)
+			MagFilter = suggestion;
+	}
+
+	E_TEXTURE_MIN_FILTER getEffectiveMinFilter() const
+	{
+		return MinFilter.value_or(ETMINF_LINEAR_MIPMAP_NEAREST);
+	}
+
+	E_TEXTURE_MAG_FILTER getEffectiveMagFilter() const
+	{
+		return MagFilter.value_or(ETMAGF_LINEAR);
 	}
 
 	//! Copy constructor
@@ -203,11 +226,13 @@ public:
 	u8 TextureWrapV : 4;
 	u8 TextureWrapW : 4;
 
-	//! Minification (downscaling) filter
-	E_TEXTURE_MIN_FILTER MinFilter;
+	//! Minification (downscaling) filter.
+	//! If absent, Luanti gets to choose based on user settings.
+	std::optional<E_TEXTURE_MIN_FILTER> MinFilter;
 
-	//! Magnification (upscaling) filter
-	E_TEXTURE_MAG_FILTER MagFilter;
+	//! Magnification (upscaling) filter.
+	//! If absent, Luanti gets to choose based on user settings.
+	std::optional<E_TEXTURE_MAG_FILTER> MagFilter;
 
 	//! Is anisotropic filtering enabled? Default: 0, disabled
 	/** In Irrlicht you can use anisotropic texture filtering
