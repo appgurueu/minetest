@@ -1860,6 +1860,7 @@ int ModApiMapgen::l_read_schematic(lua_State *L)
 	const NodeDefManager *ndef = getGameDef(L)->ndef();
 
 	//// Read options
+	luaL_checktype(L, 2, LUA_TTABLE);
 	std::string write_yslice = getstringfield_default(L, 2, "write_yslice_prob", "all");
 
 	//// Get schematic
