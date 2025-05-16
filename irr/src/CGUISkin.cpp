@@ -7,6 +7,7 @@
 #include "CGUISkin.h"
 
 #include "IGUIFont.h"
+#include "IGUISkin.h"
 #include "IGUISpriteBank.h"
 #include "IGUIElement.h"
 #include "IVideoDriver.h"
@@ -258,7 +259,8 @@ implementations to find out how to draw the part exactly. */
 void CGUISkin::drawColored3DButtonPaneStandard(IGUIElement* element,
 					const core::rect<s32>& r,
 					const core::rect<s32>* clip,
-					const video::SColor* colors)
+					const video::SColor* colors,
+					bool focus)
 {
 	if (!Driver)
 		return;
@@ -270,17 +272,13 @@ void CGUISkin::drawColored3DButtonPaneStandard(IGUIElement* element,
 
 	Driver->draw2DRectangle(colors[EGDC_3D_DARK_SHADOW], rect, clip);
 
-	rect.LowerRightCorner.X -= 1;
-	rect.LowerRightCorner.Y -= 1;
+	rect.LowerRightCorner -= 1;
 	Driver->draw2DRectangle(colors[EGDC_3D_HIGH_LIGHT], rect, clip);
 
-	rect.UpperLeftCorner.X += 1;
-	rect.UpperLeftCorner.Y += 1;
-	Driver->draw2DRectangle(colors[EGDC_3D_SHADOW], rect, clip);
+	rect.UpperLeftCorner += 1;
+	Driver->draw2DRectangle(focus ? Colors[EGDC_FOCUSED_EDITABLE] : colors[EGDC_3D_SHADOW], rect, clip);
 
-	rect.LowerRightCorner.X -= 1;
-	rect.LowerRightCorner.Y -= 1;
-
+	rect.LowerRightCorner -= 1;
 	Driver->draw2DRectangle(colors[EGDC_3D_FACE], rect, clip);
 }
 // END PATCH

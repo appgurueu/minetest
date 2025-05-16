@@ -263,7 +263,7 @@ void GUIButton::draw()
 		{
 			// PATCH
 			skin->drawColored3DButtonPaneStandard(this, AbsoluteRect,
-					&AbsoluteClippingRect, Colors);
+					&AbsoluteClippingRect, Colors, focused);
 			// END PATCH
 		}
 		else

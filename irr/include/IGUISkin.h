@@ -404,7 +404,8 @@ public:
 	virtual void drawColored3DButtonPaneStandard(IGUIElement* element,
 			const core::rect<s32>& rect,
 			const core::rect<s32>* clip=0,
-			const video::SColor* colors=0) = 0;
+			const video::SColor* colors=0,
+			bool focus = false) = 0;
 
 	//! draws a pressed 3d button pane
 	/** Used for drawing for example buttons in pressed state.
