@@ -38,7 +38,7 @@ CAnimatedMeshSceneNode::CAnimatedMeshSceneNode(IAnimatedMesh *mesh,
 		const core::vector3df &scale) :
 		IAnimatedMeshSceneNode(parent, mgr, id, position, rotation, scale),
 		Mesh(nullptr),
-		StartFrame(0), EndFrame(0), FramesPerSecond(0.025f),
+		StartFrame(0), EndFrame(0), FramesPerSecond(15.0f),
 		CurrentFrameNr(0.f), LastTimeMs(0),
 		TransitionTime(0), Transiting(0.f), TransitingBlend(0.f),
 		JointsUsed(false),
@@ -85,7 +85,7 @@ void CAnimatedMeshSceneNode::buildFrameNr(u32 timeMs)
 		CurrentFrameNr = StartFrame; // Support for non animated meshes
 	} else if (Looping) {
 		// play animation looped
-		CurrentFrameNr += timeMs * FramesPerSecond;
+		CurrentFrameNr += timeMs * FramesPerSecond / 1000.0f;
 
 		// We have no interpolation between EndFrame and StartFrame,
 		// the last frame must be identical to first one with our current solution.
@@ -99,7 +99,7 @@ void CAnimatedMeshSceneNode::buildFrameNr(u32 timeMs)
 	} else {
 		// play animation non looped
 
-		CurrentFrameNr += timeMs * FramesPerSecond;
+		CurrentFrameNr += timeMs * FramesPerSecond / 1000.0f;
 		if (FramesPerSecond > 0.f) { // forwards...
 			CurrentFrameNr = std::min(CurrentFrameNr, EndFrame);
 		} else { // backwards...
@@ -347,12 +347,12 @@ bool CAnimatedMeshSceneNode::setFrameLoop(f32 begin, f32 end)
 //! sets the speed with witch the animation is played
 void CAnimatedMeshSceneNode::setAnimationSpeed(f32 framesPerSecond)
 {
-	FramesPerSecond = framesPerSecond * 0.001f;
+	FramesPerSecond = framesPerSecond;
 }
 
 f32 CAnimatedMeshSceneNode::getAnimationSpeed() const
 {
-	return FramesPerSecond * 1000.f;
+	return FramesPerSecond;
 }
 
 //! returns the axis aligned bounding box of this node
