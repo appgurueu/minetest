@@ -626,9 +626,8 @@ bool CB3DMeshFileLoader::readChunkANIM()
 	B3DFile->read(&animFlags, sizeof(s32));
 	B3DFile->read(&animFrames, sizeof(s32));
 	readFloats(&animFPS, 1);
-	if (animFPS > 0.f)
-		AnimatedMesh->setAnimationSpeed(animFPS);
 	os::Printer::log("FPS", io::path((double)animFPS), ELL_DEBUG);
+	// Note: We have no use for FPS, as it is always overridden.
 
 #ifdef __BIG_ENDIAN__
 	animFlags = os::Byteswap::byteswap(animFlags);

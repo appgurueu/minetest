@@ -725,7 +725,6 @@ void SelfType::MeshExtractor::load()
 				warn("multiple animations are not supported");
 
 			loadAnimation(0);
-			m_irr_model->setAnimationSpeed(1);
 		}
 	} catch (const std::out_of_range &e) {
 		throw std::runtime_error(e.what());

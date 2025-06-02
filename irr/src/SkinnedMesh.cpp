@@ -3,13 +3,9 @@
 // For conditions of distribution and use, see copyright notice in irrlicht.h
 
 #include "SkinnedMesh.h"
-#include "IBoneSceneNode.h"
-#include "CBoneSceneNode.h"
-#include "IAnimatedMeshSceneNode.h"
 #include "SSkinMeshBuffer.h"
 #include "Transform.h"
 #include "aabbox3d.h"
-#include "irrMath.h"
 #include "matrix4.h"
 #include "os.h"
 #include "vector3d.h"
@@ -39,21 +35,6 @@ SkinnedMesh::~SkinnedMesh()
 f32 SkinnedMesh::getMaxFrameNumber() const
 {
 	return EndFrame;
-}
-
-//! Gets the default animation speed of the animated mesh.
-/** \return Amount of frames per second. If the amount is 0, it is a static, non animated mesh. */
-f32 SkinnedMesh::getAnimationSpeed() const
-{
-	return FramesPerSecond;
-}
-
-//! Gets the frame count of the animated mesh.
-/** \param fps Frames per second to play the animation with. If the amount is 0, it is not animated.
-The actual speed is set in the scene node the mesh is instantiated in.*/
-void SkinnedMesh::setAnimationSpeed(f32 fps)
-{
-	FramesPerSecond = fps;
 }
 
 // Keyframe Animation

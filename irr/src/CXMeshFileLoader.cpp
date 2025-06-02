@@ -1322,7 +1322,8 @@ bool CXMeshFileLoader::parseDataObjectAnimationTicksPerSecond()
 		SET_ERR_AND_RETURN();
 	}
 
-	const u32 ticks = readInt();
+	readInt(); // FPS
+	// Note: We have no use for FPS, as it is always overridden.
 
 	if (!checkForOneFollowingSemicolons()) {
 		os::Printer::log("No closing semicolon in AnimationTicksPerSecond in x file", ELL_WARNING);
@@ -1335,8 +1336,6 @@ bool CXMeshFileLoader::parseDataObjectAnimationTicksPerSecond()
 		os::Printer::log("Line", core::stringc(Line).c_str(), ELL_WARNING);
 		SET_ERR_AND_RETURN();
 	}
-
-	AnimatedMesh->setAnimationSpeed(static_cast<irr::f32>(ticks));
 
 	return true;
 }

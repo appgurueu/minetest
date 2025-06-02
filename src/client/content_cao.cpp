@@ -1371,11 +1371,9 @@ void GenericCAO::updateAnimation()
 
 	// Note: This sets the current frame as well, (re)starting the animation.
 	m_animated_meshnode->setFrameLoop(m_animation_range.X, m_animation_range.Y);
-	if (m_animated_meshnode->getAnimationSpeed() != m_animation_speed)
-		m_animated_meshnode->setAnimationSpeed(m_animation_speed);
+	m_animated_meshnode->setAnimationSpeed(m_animation_speed);
 	m_animated_meshnode->setTransitionTime(m_animation_blend);
-	if (m_animated_meshnode->getLoopMode() != m_animation_loop)
-		m_animated_meshnode->setLoopMode(m_animation_loop);
+	m_animated_meshnode->setLoopMode(m_animation_loop);
 }
 
 void GenericCAO::updateAnimationSpeed()
