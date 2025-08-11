@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "IMesh.h"
+#include "SMaterial.h"
 #include "SkinnedMesh.h"
 #include "ISceneManager.h"
 #include "ISceneNode.h"
@@ -11,6 +13,7 @@
 #include "irrString.h"
 #include "irrArray.h"
 #include "IMeshLoader.h"
+#include <unordered_map>
 
 namespace scene
 {
@@ -62,6 +65,10 @@ public:
 
 	//! registers a node for rendering it at a specific time.
 	u32 registerNodeForRendering(ISceneNode *node, E_SCENE_NODE_RENDER_PASS pass = ESNRP_AUTOMATIC) override;
+
+	void registerMeshBufferForRendering(const video::SMaterial &mat, const IMeshBuffer *buffer, const core::matrix4 &transform) override;
+
+	void flushMeshBuffers() override;
 
 	//! Clear all nodes which are currently registered for rendering
 	void clearAllRegisteredNodesForRendering() override;
@@ -251,6 +258,13 @@ private:
 
 	std::vector<IMeshLoader *> MeshLoaderList;
 	std::vector<ISceneNode *> DeletionList;
+
+	struct MeshBufferEntry
+	{
+		const IMeshBuffer *MeshBuffer;
+		const core::matrix4 Transform;
+	};
+	std::unordered_map<video::SMaterial, std::vector<MeshBufferEntry>> RegisteredMeshBuffers;
 
 	//! current active camera
 	ICameraSceneNode *ActiveCamera;

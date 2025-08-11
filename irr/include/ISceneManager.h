@@ -4,8 +4,11 @@
 
 #pragma once
 
+#include "IMeshBuffer.h"
 #include "IReferenceCounted.h"
+#include "SMaterial.h"
 #include "irrArray.h"
+#include "matrix4.h"
 #include "vector3d.h"
 #include "dimension2d.h"
 #include "SColor.h"
@@ -83,6 +86,7 @@ class IMeshLoader;
 class IMeshManipulator;
 class IMeshSceneNode;
 class ISceneNode;
+class IMeshBuffer;
 
 //! The Scene Manager manages scene nodes, mesh resources, cameras and all the other stuff.
 /** All Scene nodes can be created only here.
@@ -288,11 +292,19 @@ public:
 	\param pass: Specifies when the node wants to be drawn in relation to the other nodes.
 	For example, if the node is a shadow, it usually wants to be drawn after all other nodes
 	and will use ESNRP_SHADOW for this. See scene::E_SCENE_NODE_RENDER_PASS for details.
-	Note: This is _not_ a bitfield. If you want to register a note for several render passes, then
+	Note: This is _not_ a bitfield. If you want to register a node for several render passes, then
 	call this function once for each pass.
 	\return scene will be rendered ( passed culling ) */
 	virtual u32 registerNodeForRendering(ISceneNode *node,
 			E_SCENE_NODE_RENDER_PASS pass = ESNRP_AUTOMATIC) = 0;
+
+	/// Register a mesh buffer for rendering using the current render state (material, transform, and render pass).
+	/// This is what direct driver draw calls are to be replaced with in order to
+	/// benefit from batching, instancing and similar optimizations to reduce the number of drawcalls.
+	virtual void registerMeshBufferForRendering(const video::SMaterial &mat, const IMeshBuffer *buffer, const core::matrix4 &transform = core::IdentityMatrix) = 0;
+
+	/// Flush the registered mesh buffers. To be called after each render pass.
+	virtual void flushMeshBuffers() = 0;
 
 	//! Clear all nodes which are currently registered for rendering
 	/** Usually you don't have to care about this as drawAll will clear nodes

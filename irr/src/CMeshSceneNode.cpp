@@ -85,7 +85,6 @@ void CMeshSceneNode::render()
 
 	++PassCount;
 
-	driver->setTransform(video::ETS_WORLD, AbsoluteTransformation);
 	Box = Mesh->getBoundingBox();
 
 	for (u32 i = 0; i < Mesh->getMeshBufferCount(); ++i) {
@@ -98,8 +97,7 @@ void CMeshSceneNode::render()
 			// only render transparent buffer if this is the transparent render pass
 			// and solid only in solid pass
 			if (transparent == isTransparentPass) {
-				driver->setMaterial(material);
-				driver->drawMeshBuffer(mb);
+				SceneManager->registerMeshBufferForRendering(material, mb, AbsoluteTransformation);
 			}
 		}
 	}

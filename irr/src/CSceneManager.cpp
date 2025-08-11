@@ -4,8 +4,15 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 
 #include "CSceneManager.h"
+#include "CIndexBuffer.h"
+#include "CVertexBuffer.h"
+#include "EPrimitiveTypes.h"
+#include "EVideoTypes.h"
+#include "ISceneNode.h"
+#include "IVertexBuffer.h"
 #include "IVideoDriver.h"
 #include "IFileSystem.h"
 #include "CMeshCache.h"
@@ -14,6 +21,10 @@
 #include "IReadFile.h"
 #include "IWriteFile.h"
 
+#include "S3DVertex.h"
+#include "SVertexIndex.h"
+#include "irrTypes.h"
+#include "matrix4.h"
 #include "os.h"
 
 #include "SkinnedMesh.h"
@@ -439,6 +450,70 @@ u32 CSceneManager::registerNodeForRendering(ISceneNode *node, E_SCENE_NODE_RENDE
 	return taken;
 }
 
+// Note: The buffer must not be mutated after registration!
+void CSceneManager::registerMeshBufferForRendering(const video::SMaterial &mat, const IMeshBuffer *buffer, const core::matrix4 &transform)
+{
+	MeshBufferEntry entry{buffer, transform};
+	std::vector<MeshBufferEntry> &meshbufs = RegisteredMeshBuffers[mat];
+	meshbufs.emplace_back(std::move(entry));
+}
+
+void CSceneManager::flushMeshBuffers()
+{
+	for (const auto &[mat, entries] : RegisteredMeshBuffers) {
+		Driver->setMaterial(mat);
+		if (entries.size() <= 2) {
+			// draw each mesh buffer separately
+			for (const auto &entry : entries) {
+				Driver->setTransform(video::ETS_WORLD, entry.Transform);
+				Driver->drawMeshBuffer(entry.MeshBuffer);
+			}
+			continue;
+		}
+		scene::SVertexBuffer vbuf;
+		scene::SIndexBuffer ibuf;
+		for (const auto &entry : entries) {
+			const auto &mb = entry.MeshBuffer;
+			const auto *vb = mb->getVertexBuffer();
+			const auto *ib = mb->getIndexBuffer();
+
+			if (vb->getType() != video::EVT_STANDARD || ib->getType() != video::EIT_16BIT) {
+				Driver->setTransform(video::ETS_WORLD, entry.Transform);
+				Driver->drawMeshBuffer(mb);
+				continue;
+			}
+
+			const u32 vbuf_count = vbuf.getCount();
+			/* if (vbuf_count + vb->getCount() > 60000) {
+				Driver->setTransform(video::ETS_WORLD, core::IdentityMatrix);
+				Driver->drawVertexPrimitiveList(vbuf.getData(), vbuf.getCount(),
+						ibuf.getData(), ibuf.getPrimitiveCount(EPT_TRIANGLES));
+				// TODO...
+			} */
+
+			auto *vertices = static_cast<const video::S3DVertex *>(vb->getData());
+			for (u32 i = 0; i < vb->getCount(); ++i) {
+				video::S3DVertex vertex = vertices[i];
+				entry.Transform.transformVect(vertex.Pos);
+				vertex.Normal = entry.Transform.rotateAndScaleVect(vertex.Normal);
+				vbuf.Data.push_back(vertex);
+			}
+
+			auto *indices = static_cast<const u16 *>(ib->getData());
+			for (u32 i = 0; i < ib->getCount(); ++i) {
+				ibuf.Data.push_back(indices[i] + vbuf_count);
+			}
+		}
+
+		std::cout << "Drawing " << vbuf.getCount() << " vertices and "
+			<< ibuf.getCount() << " indices (" << entries.size() << " mesh buffers)" << std::endl;
+		Driver->setTransform(video::ETS_WORLD, core::IdentityMatrix);
+		Driver->drawVertexPrimitiveList(vbuf.getData(), vbuf.getCount(),
+				ibuf.getData(), ibuf.getPrimitiveCount(EPT_TRIANGLES));
+	}
+	RegisteredMeshBuffers.clear();
+}
+
 void CSceneManager::clearAllRegisteredNodesForRendering()
 {
 	CameraList.clear();
@@ -487,27 +562,17 @@ void CSceneManager::drawAll()
 		node->render();
 	};
 
-	// render camera scenes
-	{
-		CurrentRenderPass = ESNRP_CAMERA;
+	const auto render_pass = [&](E_SCENE_NODE_RENDER_PASS pass, std::vector<scene::ISceneNode *> &nodes) {
+		CurrentRenderPass = pass;
 		Driver->getOverrideMaterial().Enabled = ((Driver->getOverrideMaterial().EnablePasses & CurrentRenderPass) != 0);
-
-		for (auto *node : CameraList)
+		for (auto *node : nodes)
 			render_node(node);
+		nodes.clear();
+		flushMeshBuffers();
+	};
 
-		CameraList.clear();
-	}
-
-	// render skyboxes
-	{
-		CurrentRenderPass = ESNRP_SKY_BOX;
-		Driver->getOverrideMaterial().Enabled = ((Driver->getOverrideMaterial().EnablePasses & CurrentRenderPass) != 0);
-
-		for (auto *node : SkyBoxList)
-			render_node(node);
-
-		SkyBoxList.clear();
-	}
+	render_pass(ESNRP_CAMERA, CameraList);
+	render_pass(ESNRP_SKY_BOX, SkyBoxList);
 
 	// render default objects
 	{
@@ -520,6 +585,7 @@ void CSceneManager::drawAll()
 			render_node(it.Node);
 
 		SolidNodeList.clear();
+		flushMeshBuffers();
 	}
 
 	// render transparent objects.
@@ -533,6 +599,7 @@ void CSceneManager::drawAll()
 			render_node(it.Node);
 
 		TransparentNodeList.clear();
+		flushMeshBuffers();
 	}
 
 	// render transparent effect objects.
@@ -546,18 +613,11 @@ void CSceneManager::drawAll()
 			render_node(it.Node);
 
 		TransparentEffectNodeList.clear();
+		flushMeshBuffers(); // TODO we should take depth sorting needs into account here
 	}
 
-	// render custom gui nodes
-	{
-		CurrentRenderPass = ESNRP_GUI;
-		Driver->getOverrideMaterial().Enabled = ((Driver->getOverrideMaterial().EnablePasses & CurrentRenderPass) != 0);
+	render_pass(ESNRP_GUI, GuiNodeList);
 
-		for (auto *node : GuiNodeList)
-			render_node(node);
-
-		GuiNodeList.clear();
-	}
 	clearDeletionList();
 
 	CurrentRenderPass = ESNRP_NONE;
