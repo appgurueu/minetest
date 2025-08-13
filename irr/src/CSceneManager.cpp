@@ -24,6 +24,7 @@
 #include "S3DVertex.h"
 #include "SVertexIndex.h"
 #include "irrTypes.h"
+#include "irr_ptr.h"
 #include "matrix4.h"
 #include "os.h"
 
@@ -470,46 +471,46 @@ void CSceneManager::flushMeshBuffers()
 			}
 			continue;
 		}
-		scene::SVertexBuffer vbuf;
-		scene::SIndexBuffer ibuf;
+		irr_ptr<scene::SVertexBuffer> batch_vbuf(new scene::SVertexBuffer());
+		irr_ptr<scene::SIndexBuffer> batch_ibuf(new scene::SIndexBuffer());
 		for (const auto &entry : entries) {
-			const auto &mb = entry.MeshBuffer;
-			const auto *vb = mb->getVertexBuffer();
-			const auto *ib = mb->getIndexBuffer();
+			const auto &meshbuf = entry.MeshBuffer;
+			const auto *vbuf = meshbuf->getVertexBuffer();
+			const auto *ibuf = meshbuf->getIndexBuffer();
 
-			if (vb->getType() != video::EVT_STANDARD || ib->getType() != video::EIT_16BIT) {
+			// TODO for the sake of simplicity in this PoC, we don't care about other types yet
+			if (vbuf->getType() != video::EVT_STANDARD || ibuf->getType() != video::EIT_16BIT) {
 				Driver->setTransform(video::ETS_WORLD, entry.Transform);
-				Driver->drawMeshBuffer(mb);
+				Driver->drawMeshBuffer(meshbuf);
 				continue;
 			}
 
-			const u32 vbuf_count = vbuf.getCount();
-			/* if (vbuf_count + vb->getCount() > 60000) {
+			// At some point we need to flush the buffer because we only have u16 indices (this is with a lot of margin).
+			if (batch_vbuf->getCount() + vbuf->getCount() > 65000) {
 				Driver->setTransform(video::ETS_WORLD, core::IdentityMatrix);
-				Driver->drawVertexPrimitiveList(vbuf.getData(), vbuf.getCount(),
-						ibuf.getData(), ibuf.getPrimitiveCount(EPT_TRIANGLES));
-				// TODO...
-			} */
+				Driver->drawVertexPrimitiveList(batch_vbuf->getData(), batch_vbuf->getCount(),
+						batch_ibuf->getData(), batch_ibuf->getPrimitiveCount(EPT_TRIANGLES));
+				batch_vbuf = irr_ptr<scene::SVertexBuffer>(new scene::SVertexBuffer());
+				batch_ibuf = irr_ptr<scene::SIndexBuffer>(new scene::SIndexBuffer());
+			}
 
-			auto *vertices = static_cast<const video::S3DVertex *>(vb->getData());
-			for (u32 i = 0; i < vb->getCount(); ++i) {
+			auto *vertices = static_cast<const video::S3DVertex *>(vbuf->getData());
+			for (u32 i = 0; i < vbuf->getCount(); ++i) {
 				video::S3DVertex vertex = vertices[i];
 				entry.Transform.transformVect(vertex.Pos);
 				vertex.Normal = entry.Transform.rotateAndScaleVect(vertex.Normal);
-				vbuf.Data.push_back(vertex);
+				batch_vbuf->Data.push_back(vertex);
 			}
 
-			auto *indices = static_cast<const u16 *>(ib->getData());
-			for (u32 i = 0; i < ib->getCount(); ++i) {
-				ibuf.Data.push_back(indices[i] + vbuf_count);
+			auto *indices = static_cast<const u16 *>(ibuf->getData());
+			for (u32 i = 0; i < ibuf->getCount(); ++i) {
+				batch_ibuf->Data.push_back(indices[i] + batch_vbuf->getCount());
 			}
 		}
 
-		std::cout << "Drawing " << vbuf.getCount() << " vertices and "
-			<< ibuf.getCount() << " indices (" << entries.size() << " mesh buffers)" << std::endl;
 		Driver->setTransform(video::ETS_WORLD, core::IdentityMatrix);
-		Driver->drawVertexPrimitiveList(vbuf.getData(), vbuf.getCount(),
-				ibuf.getData(), ibuf.getPrimitiveCount(EPT_TRIANGLES));
+		Driver->drawVertexPrimitiveList(batch_vbuf->getData(), batch_vbuf->getCount(),
+				batch_ibuf->getData(), batch_ibuf->getPrimitiveCount(EPT_TRIANGLES));
 	}
 	RegisteredMeshBuffers.clear();
 }
